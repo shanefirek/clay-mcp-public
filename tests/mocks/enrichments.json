@@ -1,0 +1,44 @@
+{
+  "runEnrichmentResponse": {
+    "recordCount": 2,
+    "runMode": "INDIVIDUAL"
+  },
+  "availableActions": [
+    {
+      "actionKey": "leadmagic-find-work-email",
+      "actionPackageId": "edb58209-a62d-42be-992a-e41b87eeacc2",
+      "name": "LeadMagic - Find Work Email",
+      "category": "email-finders"
+    },
+    {
+      "actionKey": "findymail-find-work-email",
+      "actionPackageId": "9515bb04-4267-4074-94eb-653545c3c38f",
+      "name": "Findymail - Find Work Email",
+      "category": "email-finders"
+    },
+    {
+      "actionKey": "apollo-oauth-enrich-person",
+      "actionPackageId": "778df10d-f68b-461a-8eb7-56047737f5eb",
+      "name": "Apollo - Enrich Person",
+      "category": "crm"
+    },
+    {
+      "actionKey": "use-ai",
+      "actionPackageId": "67ba01e9-1898-4e7d-afe7-7ebe24819a57",
+      "name": "Claygent (AI)",
+      "category": "ai"
+    }
+  ],
+  "waterfallPresets": [
+    {
+      "name": "Email Finder Waterfall",
+      "type": "person/workEmail",
+      "providers": ["leadmagic", "findymail", "hunter", "prospeo"]
+    },
+    {
+      "name": "Company Domain Finder",
+      "type": "company/domain",
+      "providers": ["domain-from-company"]
+    }
+  ]
+}

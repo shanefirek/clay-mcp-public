@@ -1,0 +1,52 @@
+{
+  "t_example": {
+    "id": "t_example",
+    "name": "Example Table",
+    "workbookId": "wb_example",
+    "fields": [
+      {
+        "id": "f_name",
+        "name": "Name",
+        "type": "text"
+      },
+      {
+        "id": "f_email",
+        "name": "Email",
+        "type": "email"
+      },
+      {
+        "id": "f_company",
+        "name": "Company",
+        "type": "text"
+      },
+      {
+        "id": "f_domain",
+        "name": "Company Domain",
+        "type": "url",
+        "typeSettings": {
+          "actionKey": "get-domain-from-company-name",
+          "actionPackageId": "e5f3b09f-1b8f-4806-a960-27abf163940f"
+        }
+      },
+      {
+        "id": "f_work_email",
+        "name": "Work Email",
+        "type": "waterfall",
+        "typeSettings": {
+          "formulaType": "waterfall",
+          "waterfallType": "person/workEmail"
+        }
+      }
+    ],
+    "views": [
+      {
+        "id": "gv_default",
+        "name": "Default View",
+        "tableId": "t_example"
+      }
+    ],
+    "recordCount": 150,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-15T00:00:00Z"
+  }
+}

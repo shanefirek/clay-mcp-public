@@ -1,0 +1,28 @@
+{
+  "r_example1": {
+    "id": "r_example1",
+    "tableId": "t_example",
+    "cells": {
+      "f_name": { "value": "John Doe" },
+      "f_email": { "value": "john@example.com" },
+      "f_company": { "value": "Acme Inc" },
+      "f_domain": { "value": "acme.com" },
+      "f_work_email": { "value": "john.doe@acme.com" }
+    },
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-10T00:00:00Z"
+  },
+  "r_example2": {
+    "id": "r_example2",
+    "tableId": "t_example",
+    "cells": {
+      "f_name": { "value": "Jane Smith" },
+      "f_email": { "value": "jane@example.com" },
+      "f_company": { "value": "TechCorp" },
+      "f_domain": { "value": "techcorp.io" },
+      "f_work_email": { "value": null }
+    },
+    "createdAt": "2024-01-02T00:00:00Z",
+    "updatedAt": "2024-01-11T00:00:00Z"
+  }
+}

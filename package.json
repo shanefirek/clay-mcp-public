@@ -1,0 +1,40 @@
+{
+  "name": "clay-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Clay's internal API - full control over tables, records, enrichments",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "clay-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && cp src/enrichments/registry.json dist/enrichments/ && mkdir -p dist/templates && cp src/templates/claygent-prompts.json dist/templates/",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "clay",
+    "model-context-protocol",
+    "enrichment",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "dotenv": "^17.2.3",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

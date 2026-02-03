@@ -1,0 +1,346 @@
+{
+  "_meta": {
+    "description": "Pre-built Claygent prompt templates for common sales workflows",
+    "version": "1.0.0",
+    "usage": "Use with clay_create_claygent_field or clay_get_prompt_template tool"
+  },
+  "templates": {
+    "news-finder": {
+      "name": "News & Press Finder",
+      "description": "Find recent news, press releases, and media coverage about a company",
+      "category": "research",
+      "model": "clay-neon",
+      "prompt": "#CONTEXT#\nYou are a business intelligence researcher specializing in company news monitoring. Your task is to find recent, relevant news and press coverage about the target company.\n\n#OBJECTIVE#\nFind recent news, press releases, and media mentions for {{Company Name}} ({{Domain}}).\n\n#INSTRUCTIONS#\n1) Search Strategy:\n   - Search for \"{{Company Name}}\" + news, press release, announcement\n   - Check the company's official newsroom/press page at {{Domain}}/news or {{Domain}}/press\n   - Look for coverage in TechCrunch, Forbes, Bloomberg, Reuters, industry publications\n   - Focus on news from the last 6 months\n\n2) Types of news to find:\n   - Funding announcements\n   - Product launches\n   - Partnership announcements\n   - Executive hires/changes\n   - Awards or recognition\n   - Expansion news (new offices, markets)\n   - Customer wins or case studies\n\n3) For each news item, extract:\n   - Headline\n   - Publication date\n   - Source/publication name\n   - Brief summary (1-2 sentences)\n   - URL if available\n\n4) Output format:\n   Return a JSON object with:\n   - recentNews: array of news items (max 5, most recent first)\n   - latestHeadline: the most recent/significant headline\n   - newsDate: date of most recent news\n   - newsSummary: 2-3 sentence summary of key recent developments\n\n5) If no news found:\n   Return empty arrays and note \"No recent news found\" in summary.",
+      "outputFields": {
+        "recentNews": {
+          "type": "array",
+          "description": "Array of recent news items with headline, date, source, summary, url"
+        },
+        "latestHeadline": {
+          "type": "string",
+          "description": "Most recent or significant headline"
+        },
+        "newsDate": {
+          "type": "string",
+          "description": "Date of most recent news (YYYY-MM-DD)"
+        },
+        "newsSummary": {
+          "type": "string",
+          "description": "2-3 sentence summary of key recent developments"
+        }
+      },
+      "requiredFields": ["Company Name", "Domain"]
+    },
+
+    "competitor-research": {
+      "name": "Competitor Intelligence",
+      "description": "Research competitors' customers, case studies, and market positioning",
+      "category": "research",
+      "model": "clay-neon",
+      "prompt": "#CONTEXT#\nYou are a competitive intelligence analyst. Your task is to gather intelligence about a company's customers, case studies, and market positioning.\n\n#OBJECTIVE#\nResearch {{Company Name}} ({{Domain}}) to find their customers, case studies, and competitive positioning.\n\n#INSTRUCTIONS#\n1) Customer Research:\n   - Find the company's case studies page (usually {{Domain}}/customers or {{Domain}}/case-studies)\n   - Look for customer logos on their homepage\n   - Search for \"{{Company Name}} customer\" or \"{{Company Name}} case study\"\n   - Check G2, Capterra, TrustRadius for customer reviews mentioning company names\n\n2) Extract for each customer found:\n   - Company name\n   - Industry\n   - Use case (if mentioned)\n   - Quote or testimonial (if available)\n\n3) Competitive Positioning:\n   - What problem do they solve?\n   - Who is their target market?\n   - What are their key differentiators?\n   - Pricing tier (enterprise, mid-market, SMB)?\n\n4) Output format:\n   Return a JSON object with:\n   - customers: array of customer objects (max 10)\n   - totalCustomersFound: approximate count\n   - targetMarket: their ideal customer description\n   - keyDifferentiators: array of 2-3 main differentiators\n   - pricingTier: \"enterprise\", \"mid-market\", \"smb\", or \"unknown\"\n\n5) Quality rules:\n   - Only include customers you can verify from their website or credible sources\n   - Don't guess or infer customers not explicitly mentioned",
+      "outputFields": {
+        "customers": {
+          "type": "array",
+          "description": "Array of verified customers with name, industry, useCase"
+        },
+        "totalCustomersFound": {
+          "type": "number",
+          "description": "Approximate total customers found"
+        },
+        "targetMarket": {
+          "type": "string",
+          "description": "Description of their ideal customer"
+        },
+        "keyDifferentiators": {
+          "type": "array",
+          "description": "2-3 main competitive differentiators"
+        },
+        "pricingTier": {
+          "type": "string",
+          "description": "enterprise, mid-market, smb, or unknown"
+        }
+      },
+      "requiredFields": ["Company Name", "Domain"]
+    },
+
+    "hiring-signals": {
+      "name": "Hiring Signals Detector",
+      "description": "Detect hiring activity and open roles that indicate growth or specific needs",
+      "category": "signals",
+      "model": "clay-neon",
+      "prompt": "#CONTEXT#\nYou are a sales intelligence analyst specializing in hiring signals. Companies that are actively hiring often have budget and are in growth mode, making them better prospects.\n\n#OBJECTIVE#\nAnalyze hiring activity for {{Company Name}} ({{Domain}}) to identify growth signals and potential needs.\n\n#INSTRUCTIONS#\n1) Search Strategy:\n   - Check {{Domain}}/careers or {{Domain}}/jobs\n   - Search LinkedIn Jobs for \"{{Company Name}}\"\n   - Look for job postings on Greenhouse, Lever, Workday career pages\n   - Search \"{{Company Name}} hiring\" or \"{{Company Name}} jobs\"\n\n2) Categorize open roles:\n   - Engineering/Technical roles\n   - Sales/Business Development roles\n   - Marketing roles\n   - Customer Success/Support roles\n   - Operations/Finance roles\n   - Executive/Leadership roles\n\n3) Identify signals:\n   - Total number of open positions\n   - Departments with most hiring (indicates investment areas)\n   - Senior hires (VP+) suggest new initiatives\n   - Technical roles suggest product investment\n   - Sales roles suggest growth/expansion\n\n4) Output format:\n   Return a JSON object with:\n   - totalOpenRoles: number of open positions found\n   - rolesByDepartment: object with counts per department\n   - seniorRoles: array of VP+ or Director+ positions\n   - hiringSignal: \"aggressive\" (20+), \"moderate\" (5-19), \"minimal\" (1-4), \"none\" (0)\n   - topHiringAreas: top 2-3 departments hiring most\n   - insights: 2-3 sentence analysis of what their hiring tells us\n\n5) If no jobs found:\n   - Check if they have a careers page at all\n   - Note if company appears to not be actively hiring",
+      "outputFields": {
+        "totalOpenRoles": {
+          "type": "number",
+          "description": "Total number of open positions"
+        },
+        "rolesByDepartment": {
+          "type": "object",
+          "description": "Count of roles by department (engineering, sales, marketing, etc.)"
+        },
+        "seniorRoles": {
+          "type": "array",
+          "description": "List of VP+ or Director+ open positions"
+        },
+        "hiringSignal": {
+          "type": "string",
+          "description": "aggressive, moderate, minimal, or none"
+        },
+        "topHiringAreas": {
+          "type": "array",
+          "description": "Top 2-3 departments with most open roles"
+        },
+        "insights": {
+          "type": "string",
+          "description": "2-3 sentence analysis of hiring patterns"
+        }
+      },
+      "requiredFields": ["Company Name", "Domain"]
+    },
+
+    "tech-stack-research": {
+      "name": "Tech Stack Researcher",
+      "description": "Identify technologies and tools a company uses",
+      "category": "research",
+      "model": "clay-neon",
+      "prompt": "#CONTEXT#\nYou are a technical researcher identifying the technology stack and tools used by companies. This information is valuable for selling complementary or competitive solutions.\n\n#OBJECTIVE#\nResearch the technology stack used by {{Company Name}} ({{Domain}}).\n\n#INSTRUCTIONS#\n1) Research Methods:\n   - Analyze {{Domain}} for visible technologies (scripts, meta tags, headers)\n   - Check job postings for required technologies\n   - Search \"{{Company Name}} tech stack\" or \"{{Company Name}} engineering blog\"\n   - Look for case studies mentioning their infrastructure\n   - Check StackShare, BuiltWith, or Wappalyzer results\n\n2) Categories to identify:\n   - CRM (Salesforce, HubSpot, etc.)\n   - Marketing Automation (Marketo, Pardot, etc.)\n   - Analytics (Google Analytics, Mixpanel, Amplitude, etc.)\n   - Cloud Infrastructure (AWS, GCP, Azure)\n   - Data/Warehouse (Snowflake, Databricks, etc.)\n   - Communication (Slack, Teams, etc.)\n   - Sales Tools (Outreach, Salesloft, Gong, etc.)\n   - Engineering (languages, frameworks, databases)\n\n3) Confidence levels:\n   - \"confirmed\" - seen directly on their site or stated by company\n   - \"likely\" - found in job postings or multiple sources\n   - \"possible\" - single source or inference\n\n4) Output format:\n   Return a JSON object with:\n   - techStack: object with categories as keys, each containing array of {tool, confidence}\n   - keyTechnologies: top 5 most notable/relevant technologies\n   - cloudProvider: primary cloud if identified\n   - crmSystem: CRM if identified\n   - insights: any notable patterns (modern stack, legacy, specific focus areas)",
+      "outputFields": {
+        "techStack": {
+          "type": "object",
+          "description": "Technologies by category with confidence levels"
+        },
+        "keyTechnologies": {
+          "type": "array",
+          "description": "Top 5 most notable technologies identified"
+        },
+        "cloudProvider": {
+          "type": "string",
+          "description": "Primary cloud provider (AWS, GCP, Azure, or unknown)"
+        },
+        "crmSystem": {
+          "type": "string",
+          "description": "CRM system if identified"
+        },
+        "insights": {
+          "type": "string",
+          "description": "Notable patterns about their tech choices"
+        }
+      },
+      "requiredFields": ["Company Name", "Domain"]
+    },
+
+    "decision-maker-finder": {
+      "name": "Decision Maker Finder",
+      "description": "Find key decision makers and their contact information",
+      "category": "prospecting",
+      "model": "clay-neon",
+      "prompt": "#CONTEXT#\nYou are a sales researcher specializing in identifying decision makers at target companies. Your goal is to find the right people to contact based on the target persona.\n\n#OBJECTIVE#\nFind {{Target Title}} or similar decision makers at {{Company Name}} ({{Domain}}).\n\n#INSTRUCTIONS#\n1) Search Strategy:\n   - Search LinkedIn for \"{{Target Title}} {{Company Name}}\"\n   - Check {{Domain}}/about or {{Domain}}/team for leadership pages\n   - Search \"{{Company Name}} {{Target Title}}\" on Google\n   - Look for the person on Crunchbase, company press releases\n\n2) Title matching:\n   - Exact match: \"{{Target Title}}\"\n   - Similar titles: VP of X, Head of X, Director of X, Chief X Officer\n   - For \"VP Sales\" also look for: CRO, Head of Revenue, VP Revenue, Chief Revenue Officer\n   - For \"VP Engineering\" also look for: CTO, VP Product, Head of Engineering\n   - For \"VP Marketing\" also look for: CMO, Head of Growth, VP Growth\n\n3) For each person found, extract:\n   - Full name\n   - Current title\n   - LinkedIn URL\n   - Time in role (if visible)\n   - Previous company (if relevant)\n\n4) Output format:\n   Return a JSON object with:\n   - primaryContact: the best match for the target title\n   - alternativeContacts: array of other relevant decision makers (max 3)\n   - confidence: \"high\" (exact title match), \"medium\" (similar title), \"low\" (best guess)\n   - notes: any relevant context about the person or org structure\n\n5) Quality rules:\n   - Verify the person currently works at {{Company Name}}\n   - Prefer LinkedIn profiles that show current employment\n   - If exact title not found, find the closest equivalent",
+      "outputFields": {
+        "primaryContact": {
+          "type": "object",
+          "description": "Best match: fullName, title, linkedinUrl, timeInRole"
+        },
+        "alternativeContacts": {
+          "type": "array",
+          "description": "Other relevant decision makers (max 3)"
+        },
+        "confidence": {
+          "type": "string",
+          "description": "high, medium, or low based on title match"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Context about the person or org structure"
+        }
+      },
+      "requiredFields": ["Company Name", "Domain", "Target Title"]
+    },
+
+    "funding-signals": {
+      "name": "Funding & Growth Signals",
+      "description": "Find funding history, growth indicators, and financial signals",
+      "category": "signals",
+      "model": "clay-neon",
+      "prompt": "#CONTEXT#\nYou are a financial research analyst tracking company funding and growth signals. Recent funding or growth indicators suggest a company has budget and is investing in growth.\n\n#OBJECTIVE#\nResearch funding history and growth signals for {{Company Name}} ({{Domain}}).\n\n#INSTRUCTIONS#\n1) Funding Research:\n   - Search Crunchbase for {{Company Name}} funding history\n   - Look for press releases about funding rounds\n   - Search \"{{Company Name}} raises\" or \"{{Company Name}} funding\"\n   - Check PitchBook, CB Insights mentions\n\n2) Extract funding details:\n   - Most recent round (Series A, B, C, etc.)\n   - Amount raised in last round\n   - Total funding to date\n   - Key investors\n   - Date of last funding\n\n3) Growth signals to identify:\n   - Recent funding (last 12 months)\n   - Headcount growth (check LinkedIn company page)\n   - Office expansion\n   - International expansion\n   - Product launches\n   - Major customer wins\n\n4) Output format:\n   Return a JSON object with:\n   - lastFundingRound: series/stage name\n   - lastFundingAmount: amount in USD\n   - lastFundingDate: date (YYYY-MM-DD)\n   - totalFunding: total raised to date\n   - keyInvestors: array of notable investors\n   - employeeCount: current headcount if found\n   - growthSignals: array of identified growth indicators\n   - fundingSignal: \"hot\" (funded < 12mo), \"warm\" (12-24mo), \"cold\" (> 24mo or none)\n\n5) If private/unfunded:\n   - Note if bootstrapped\n   - Look for revenue or profitability mentions\n   - Check for PE/acquisition signals",
+      "outputFields": {
+        "lastFundingRound": {
+          "type": "string",
+          "description": "Most recent funding round (Seed, Series A, etc.)"
+        },
+        "lastFundingAmount": {
+          "type": "string",
+          "description": "Amount raised in last round"
+        },
+        "lastFundingDate": {
+          "type": "string",
+          "description": "Date of last funding (YYYY-MM-DD)"
+        },
+        "totalFunding": {
+          "type": "string",
+          "description": "Total funding raised to date"
+        },
+        "keyInvestors": {
+          "type": "array",
+          "description": "Notable investors"
+        },
+        "employeeCount": {
+          "type": "number",
+          "description": "Current employee count"
+        },
+        "growthSignals": {
+          "type": "array",
+          "description": "Identified growth indicators"
+        },
+        "fundingSignal": {
+          "type": "string",
+          "description": "hot, warm, or cold based on recency"
+        }
+      },
+      "requiredFields": ["Company Name", "Domain"]
+    },
+
+    "pre-call-brief": {
+      "name": "Pre-Call Research Brief",
+      "description": "Generate a comprehensive research brief before a sales call",
+      "category": "research",
+      "model": "clay-argon",
+      "prompt": "#CONTEXT#\nYou are a senior sales researcher preparing a comprehensive briefing document for a sales representative before an important call. The brief should give them everything they need to have an informed, personalized conversation.\n\n#OBJECTIVE#\nCreate a pre-call research brief for a meeting with someone at {{Company Name}} ({{Domain}}).\n\n#INSTRUCTIONS#\n1) Company Overview:\n   - What does the company do? (1-2 sentences)\n   - Industry and target market\n   - Company size (employees, if public: revenue)\n   - Founded year, headquarters location\n   - Key products/services\n\n2) Recent News & Events:\n   - Search for news in the last 6 months\n   - Funding announcements\n   - Product launches\n   - Leadership changes\n   - Partnerships or acquisitions\n\n3) Business Context:\n   - Current challenges they might face (based on industry/news)\n   - Growth stage (startup, scale-up, enterprise)\n   - Likely priorities based on hiring patterns\n   - Competitive landscape\n\n4) Conversation Starters:\n   - 2-3 specific, personalized talking points\n   - Reference recent news or achievements\n   - Questions to ask based on research\n\n5) Output format:\n   Return a JSON object with:\n   - companyOverview: 2-3 sentence summary\n   - keyFacts: object with industry, size, founded, hq\n   - recentNews: array of 2-3 recent news items\n   - businessContext: current challenges and priorities\n   - conversationStarters: array of 3 personalized talking points\n   - questionsToAsk: array of 3 discovery questions\n   - competitorMentions: any competitors mentioned in research\n\n6) Quality:\n   - Be specific, not generic\n   - Include dates and numbers where possible\n   - Focus on actionable insights",
+      "outputFields": {
+        "companyOverview": {
+          "type": "string",
+          "description": "2-3 sentence company summary"
+        },
+        "keyFacts": {
+          "type": "object",
+          "description": "Industry, size, founded year, headquarters"
+        },
+        "recentNews": {
+          "type": "array",
+          "description": "2-3 recent news items with dates"
+        },
+        "businessContext": {
+          "type": "string",
+          "description": "Current challenges and likely priorities"
+        },
+        "conversationStarters": {
+          "type": "array",
+          "description": "3 personalized talking points"
+        },
+        "questionsToAsk": {
+          "type": "array",
+          "description": "3 discovery questions based on research"
+        },
+        "competitorMentions": {
+          "type": "array",
+          "description": "Competitors mentioned in research"
+        }
+      },
+      "requiredFields": ["Company Name", "Domain"]
+    },
+
+    "linkedin-post-analyzer": {
+      "name": "LinkedIn Post Analyzer",
+      "description": "Analyze a prospect's recent LinkedIn posts for personalization",
+      "category": "personalization",
+      "model": "clay-neon",
+      "prompt": "#CONTEXT#\nYou are a social media analyst helping sales reps personalize their outreach. By analyzing a prospect's LinkedIn posts, you can find relevant talking points and demonstrate genuine interest.\n\n#OBJECTIVE#\nAnalyze recent LinkedIn activity for {{Person Name}} at {{Company Name}} to find personalization opportunities.\n\n#INSTRUCTIONS#\n1) Search Strategy:\n   - Find their LinkedIn profile using \"{{Person Name}} {{Company Name}} LinkedIn\"\n   - Look for their recent posts (last 3 months)\n   - Check posts they've commented on or shared\n   - Look for articles they've written\n\n2) For each relevant post, extract:\n   - Post topic/theme\n   - Key opinion or insight they shared\n   - Engagement level (likes, comments)\n   - Date posted\n\n3) Identify themes:\n   - What topics do they post about most?\n   - Professional interests\n   - Industry opinions\n   - Personal interests mentioned\n\n4) Generate personalization hooks:\n   - Specific post to reference\n   - How to connect it to your outreach\n   - Authentic compliment or observation\n\n5) Output format:\n   Return a JSON object with:\n   - linkedinUrl: their profile URL\n   - recentPosts: array of 3 most relevant posts with topic, insight, date\n   - topThemes: array of 2-3 themes they discuss\n   - personalizationHook: the best post/topic to reference in outreach\n   - suggestedOpener: a personalized first line referencing their content\n   - engagementLevel: \"high\" (posts weekly), \"medium\" (monthly), \"low\" (rarely)\n\n6) If limited activity:\n   - Note their headline and about section insights\n   - Look for shared content or comments instead",
+      "outputFields": {
+        "linkedinUrl": {
+          "type": "string",
+          "description": "LinkedIn profile URL"
+        },
+        "recentPosts": {
+          "type": "array",
+          "description": "3 most relevant posts with topic, insight, date"
+        },
+        "topThemes": {
+          "type": "array",
+          "description": "2-3 themes they frequently discuss"
+        },
+        "personalizationHook": {
+          "type": "string",
+          "description": "Best post/topic to reference"
+        },
+        "suggestedOpener": {
+          "type": "string",
+          "description": "Personalized first line for outreach"
+        },
+        "engagementLevel": {
+          "type": "string",
+          "description": "high, medium, or low posting frequency"
+        }
+      },
+      "requiredFields": ["Person Name", "Company Name"]
+    },
+
+    "icp-fit-scorer": {
+      "name": "ICP Fit Scorer",
+      "description": "Score a company against your Ideal Customer Profile criteria",
+      "category": "qualification",
+      "model": "clay-neon",
+      "prompt": "#CONTEXT#\nYou are a sales operations analyst evaluating whether a company matches the Ideal Customer Profile (ICP). You will research the company and score them against specific criteria.\n\n#OBJECTIVE#\nEvaluate {{Company Name}} ({{Domain}}) against ICP criteria and provide a fit score.\n\n#INSTRUCTIONS#\n1) Research the company for these attributes:\n   - Company size (employees)\n   - Industry/vertical\n   - Business model (B2B, B2C, marketplace, etc.)\n   - Geographic presence\n   - Technology sophistication\n   - Growth stage (startup, scale-up, enterprise)\n   - Funding status\n\n2) Default ICP Criteria (score each 0-20):\n   - Size fit: 50-500 employees ideal (20 pts), 500-2000 (15 pts), <50 or >2000 (10 pts)\n   - Industry fit: Tech/SaaS (20 pts), Financial Services (15 pts), Other B2B (10 pts)\n   - Growth signals: Recent funding or hiring (20 pts), stable (10 pts), declining (0 pts)\n   - Tech sophistication: Modern stack, engineering blog (20 pts), average (10 pts)\n   - Geography: US/UK/EU (20 pts), other developed (15 pts), emerging (10 pts)\n\n3) Output format:\n   Return a JSON object with:\n   - totalScore: sum of criteria scores (0-100)\n   - scoreBreakdown: object with score for each criterion\n   - tier: \"A\" (80+), \"B\" (60-79), \"C\" (40-59), \"D\" (<40)\n   - companyAttributes: extracted attributes used for scoring\n   - fitSummary: 2-3 sentence explanation of fit\n   - concerns: any red flags or concerns\n   - recommendation: \"pursue\", \"nurture\", or \"disqualify\"\n\n4) Be objective:\n   - Score based on facts found, not assumptions\n   - Note confidence level for each attribute\n   - Flag when data is unavailable",
+      "outputFields": {
+        "totalScore": {
+          "type": "number",
+          "description": "ICP fit score 0-100"
+        },
+        "scoreBreakdown": {
+          "type": "object",
+          "description": "Score for each criterion"
+        },
+        "tier": {
+          "type": "string",
+          "description": "A, B, C, or D tier"
+        },
+        "companyAttributes": {
+          "type": "object",
+          "description": "Extracted company attributes"
+        },
+        "fitSummary": {
+          "type": "string",
+          "description": "2-3 sentence fit explanation"
+        },
+        "concerns": {
+          "type": "array",
+          "description": "Red flags or concerns"
+        },
+        "recommendation": {
+          "type": "string",
+          "description": "pursue, nurture, or disqualify"
+        }
+      },
+      "requiredFields": ["Company Name", "Domain"]
+    },
+
+    "case-study-finder": {
+      "name": "Case Study & Social Proof Finder",
+      "description": "Find case studies, testimonials, and social proof for a company",
+      "category": "research",
+      "model": "clay-neon",
+      "prompt": "#CONTEXT#\nYou are a content researcher finding case studies and social proof that could be relevant for a sales conversation. Finding similar customers helps build credibility.\n\n#OBJECTIVE#\nFind case studies and social proof from {{Our Company}} that would resonate with {{Target Company}} ({{Target Domain}}).\n\n#INSTRUCTIONS#\n1) Research Target Company:\n   - What industry are they in?\n   - What size company?\n   - What are their likely use cases/challenges?\n\n2) Search for relevant proof:\n   - Look for case studies on {{Our Company}}'s website\n   - Find customers in the same industry as {{Target Company}}\n   - Find customers of similar size\n   - Look for similar use cases\n\n3) For each relevant case study:\n   - Customer name\n   - Industry match\n   - Key results/metrics\n   - Use case similarity\n   - Quote if available\n\n4) Output format:\n   Return a JSON object with:\n   - targetProfile: industry, size, likely needs of target\n   - relevantCaseStudies: array of matching case studies\n   - bestMatch: the single most relevant case study\n   - proofPoints: key metrics or results to mention\n   - suggestedTalkTrack: how to introduce the social proof\n\n5) If no direct matches:\n   - Find adjacent industry examples\n   - Look for similar company size matches\n   - Suggest general proof points",
+      "outputFields": {
+        "targetProfile": {
+          "type": "object",
+          "description": "Industry, size, likely needs of target"
+        },
+        "relevantCaseStudies": {
+          "type": "array",
+          "description": "Matching case studies with customer, industry, results"
+        },
+        "bestMatch": {
+          "type": "object",
+          "description": "Single most relevant case study"
+        },
+        "proofPoints": {
+          "type": "array",
+          "description": "Key metrics or results to mention"
+        },
+        "suggestedTalkTrack": {
+          "type": "string",
+          "description": "How to introduce the social proof in conversation"
+        }
+      },
+      "requiredFields": ["Our Company", "Target Company", "Target Domain"]
+    }
+  }
+}

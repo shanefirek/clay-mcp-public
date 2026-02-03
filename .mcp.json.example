@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "clay": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {
+        "CLAY_SESSION_COOKIE": "YOUR_SESSION_COOKIE_HERE"
+      }
+    }
+  }
+}
