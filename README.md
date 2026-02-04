@@ -24,8 +24,8 @@ Give Claude full control over your Clay tables via the Model Context Protocol.
 ### 1. Install & Build
 
 ```bash
-git clone https://github.com/shanefirek/clay-mcp.git
-cd clay-mcp
+git clone https://github.com/shanefirek/clay-mcp-public.git
+cd clay-mcp-public
 npm install
 npm run build
 ```
@@ -78,6 +78,38 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 ### 4. Restart Claude Desktop
 
 The Clay tools will now be available in Claude.
+
+### Alternative: Configure Claude Code (CLI)
+
+From your project directory, run:
+
+```bash
+claude mcp add clay -- node /absolute/path/to/clay-mcp-public/dist/index.js
+```
+
+Then set the session cookie:
+
+```bash
+claude mcp add clay -e CLAY_SESSION_COOKIE=s%3Ayour-session-cookie-here -- node /absolute/path/to/clay-mcp-public/dist/index.js
+```
+
+Or add it directly to your `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "clay": {
+      "command": "node",
+      "args": ["/absolute/path/to/clay-mcp-public/dist/index.js"],
+      "env": {
+        "CLAY_SESSION_COOKIE": "s%3Ayour-session-cookie-here"
+      }
+    }
+  }
+}
+```
+
+The Clay tools will be available in your next Claude Code session.
 
 ---
 
