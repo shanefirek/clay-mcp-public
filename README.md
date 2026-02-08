@@ -32,68 +32,24 @@ npm run build
 
 ### 2. Get Your Session Cookie
 
-Clay's internal API uses session cookies (not API keys):
+Clay does not have a public API. This server uses Clay's internal session cookie to authenticate — the same cookie your browser uses when you're logged into Clay.
+
+> **What this cookie grants:** Full access to your Clay account — creating/deleting tables, running enrichments, spending Clay credits, pushing to CRM. Treat it like a password.
+
+To get the cookie:
 
 1. Open [app.clay.com](https://app.clay.com) in Chrome
 2. Open DevTools (`Cmd + Option + I` on Mac, `F12` on Windows)
 3. Go to **Application** → **Cookies** → `app.clay.com`
 4. Copy the `claysession` cookie value (starts with `s%3A...`)
 
-### 3. Configure Claude Desktop
+### 3. Configure Authentication
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Set your session cookie as an environment variable. You have two options:
 
-```json
-{
-  "mcpServers": {
-    "clay": {
-      "command": "node",
-      "args": ["/absolute/path/to/clay-mcp/dist/index.js"],
-      "env": {
-        "CLAY_SESSION_COOKIE": "s%3Ayour-session-cookie-here"
-      }
-    }
-  }
-}
-```
+**Option A: MCP config (simplest)**
 
-**Optional:** Add your own API account overrides:
-
-```json
-{
-  "mcpServers": {
-    "clay": {
-      "command": "node",
-      "args": ["/absolute/path/to/clay-mcp/dist/index.js"],
-      "env": {
-        "CLAY_SESSION_COOKIE": "s%3Ayour-session-cookie-here",
-        "CLAY_HUNTER_ACCOUNT_ID": "aa_your_hunter_account",
-        "CLAY_APOLLO_OAUTH_ACCOUNT_ID": "aa_your_apollo_account"
-      }
-    }
-  }
-}
-```
-
-### 4. Restart Claude Desktop
-
-The Clay tools will now be available in Claude.
-
-### Alternative: Configure Claude Code (CLI)
-
-From your project directory, run:
-
-```bash
-claude mcp add clay -- node /absolute/path/to/clay-mcp-public/dist/index.js
-```
-
-Then set the session cookie:
-
-```bash
-claude mcp add clay -e CLAY_SESSION_COOKIE=s%3Ayour-session-cookie-here -- node /absolute/path/to/clay-mcp-public/dist/index.js
-```
-
-Or add it directly to your `.mcp.json`:
+Add directly to your MCP config (Claude Desktop or `.mcp.json`):
 
 ```json
 {
@@ -109,7 +65,44 @@ Or add it directly to your `.mcp.json`:
 }
 ```
 
-The Clay tools will be available in your next Claude Code session.
+**Option B: `.env` file (recommended for development)**
+
+Copy the example and fill in your cookie:
+
+```bash
+cp .env.example .env
+# Edit .env and set CLAY_SESSION_COOKIE
+```
+
+> `.env` and `.mcp.json` are both gitignored — they will never be committed to version control.
+
+### 4. Restart Claude Desktop
+
+The Clay tools will now be available in Claude.
+
+### Alternative: Configure Claude Code (CLI)
+
+```bash
+claude mcp add clay -e CLAY_SESSION_COOKIE=s%3Ayour-session-cookie-here -- node /absolute/path/to/clay-mcp-public/dist/index.js
+```
+
+Or add it directly to your `.mcp.json` (same format as Option A above).
+
+### 5. (Optional) API Account Overrides
+
+By default, enrichments use **Clay-managed accounts** (billed to your Clay credits). To use your own API keys instead, add account ID overrides:
+
+```json
+{
+  "env": {
+    "CLAY_SESSION_COOKIE": "s%3Ayour-session-cookie-here",
+    "CLAY_HUNTER_ACCOUNT_ID": "aa_your_hunter_account",
+    "CLAY_APOLLO_OAUTH_ACCOUNT_ID": "aa_your_apollo_account"
+  }
+}
+```
+
+See [Authentication Priority](#authentication-priority) for how account resolution works.
 
 ---
 
@@ -497,6 +490,45 @@ PRs welcome! Especially for:
 - Tests
 
 ---
+
+## Security
+
+### How Authentication Works
+
+This MCP server authenticates to Clay using a **session cookie** — the same token your browser stores when you log into app.clay.com. There is no official Clay API or API key system.
+
+**What the session cookie can do:**
+- Read and modify all tables, records, and fields in your Clay account
+- Create and run enrichments (which spend Clay credits)
+- Push data to connected integrations (HubSpot, Salesforce, etc.)
+- Create and delete workbooks and tables
+
+**In short: the session cookie has the same permissions as your logged-in browser session.**
+
+### Keeping Credentials Safe
+
+| File | Contains secrets? | Gitignored? |
+|------|-------------------|-------------|
+| `.env` | Yes (session cookie) | Yes |
+| `.mcp.json` | Yes (session cookie) | Yes |
+| `.env.example` | No (placeholder values only) | No (safe to commit) |
+| `claude_desktop_config.json` | Yes (session cookie) | N/A (system file, not in repo) |
+
+**Rules:**
+- Never commit a real session cookie to version control
+- Never share your session cookie in issues, PRs, or chat
+- If you suspect a cookie was exposed, log out of Clay (this invalidates the session)
+- The MCP server only uses the cookie to make API calls to `api.clay.com` — it does not store, log, or transmit the cookie anywhere else
+
+### For Agents and Automation
+
+If you are an AI agent or a person configuring this MCP for an agent:
+
+- The `CLAY_SESSION_COOKIE` env var is **required** — without it, every tool call will fail
+- The cookie is a long URL-encoded string starting with `s%3A`
+- It goes in the `env` block of your MCP config, or in a `.env` file in the project root
+- The server reads it once at startup from `process.env.CLAY_SESSION_COOKIE`
+- If tool calls start returning 401 errors, the cookie has expired and needs to be refreshed from the browser
 
 ## Disclaimer
 
