@@ -886,9 +886,9 @@ export function registerEnrichmentTools(
         const shouldInclude = (type: string) =>
           enrichments.includes('all') || enrichments.includes(type as 'basic' | 'funding' | 'techstack' | 'social');
 
-        // Basic company enrichment - use Clay's built-in
+        // Basic company enrichment - use Clay's built-in Mixrank enrichment
         if (shouldInclude('basic')) {
-          const clayCo = companyProviders['enrich-company-from-domain'] || companyProviders['clay-enrich-company'];
+          const clayCo = companyProviders['enrich-company-with-mixrank-v2'] || companyProviders['enrich-company-with-mixrank'];
           if (clayCo) {
             const field = await client.createEnrichmentField(
               tableId as TableId,
@@ -897,16 +897,17 @@ export function registerEnrichmentTools(
                 actionKey: clayCo.actionKey,
                 actionPackageId: clayCo.actionPackageId,
                 authAccountId: resolveAuthAccount(clayCo, {}).accountId,
-                inputsBinding: [{ name: 'domain', formulaText: `{{${domainFieldId}}}` }],
+                inputsBinding: [{ name: 'company_identifier', formulaText: `{{${domainFieldId}}}` }],
               }
             );
             createdFields.push('Company Info');
           }
         }
 
-        // Funding data
+        // Funding data - crunchbase is in the 'fundraising' category
         if (shouldInclude('funding')) {
-          const crunchbase = companyProviders['crunchbase-enrich-company-basic-information'];
+          const fundingProviders = await getProvidersByCategory('fundraising');
+          const crunchbase = fundingProviders['crunchbase-enrich-company-basic-information'];
           if (crunchbase) {
             const field = await client.createEnrichmentField(
               tableId as TableId,
@@ -915,7 +916,7 @@ export function registerEnrichmentTools(
                 actionKey: crunchbase.actionKey,
                 actionPackageId: crunchbase.actionPackageId,
                 authAccountId: resolveAuthAccount(crunchbase, {}).accountId,
-                inputsBinding: [{ name: 'domain', formulaText: `{{${domainFieldId}}}` }],
+                inputsBinding: [{ name: 'company_domain', formulaText: `{{${domainFieldId}}}` }],
               }
             );
             createdFields.push('Funding Info');
@@ -925,37 +926,34 @@ export function registerEnrichmentTools(
         // Tech stack
         if (shouldInclude('techstack')) {
           const techProviders = await getProvidersByCategory('technographics');
-          const builtwith = techProviders['builtwith-lookup-technologies'] || techProviders['builtwith-lookup-domain'];
-          if (builtwith) {
+          const techLookup = techProviders['lookup-technology-stack'];
+          if (techLookup) {
             const field = await client.createEnrichmentField(
               tableId as TableId,
               'Tech Stack',
               {
-                actionKey: builtwith.actionKey,
-                actionPackageId: builtwith.actionPackageId,
-                authAccountId: resolveAuthAccount(builtwith, {}).accountId,
-                inputsBinding: [{ name: 'domain', formulaText: `{{${domainFieldId}}}` }],
+                actionKey: techLookup.actionKey,
+                actionPackageId: techLookup.actionPackageId,
+                authAccountId: resolveAuthAccount(techLookup, {}).accountId,
+                inputsBinding: [{ name: 'url', formulaText: `{{${domainFieldId}}}` }],
               }
             );
             createdFields.push('Tech Stack');
           }
         }
 
-        // Social profiles
+        // Social profiles - findCompanyLinkedInPage is in company-enrichment category
         if (shouldInclude('social')) {
-          const socialProviders = await getProvidersByCategory('social');
-          const linkedin = socialProviders['linkedin-company-profile'] || Object.values(socialProviders).find(p =>
-            p.actionKey.includes('linkedin') && p.actionKey.includes('company')
-          );
-          if (linkedin) {
+          const linkedinPage = companyProviders['findCompanyLinkedInPage'];
+          if (linkedinPage) {
             const field = await client.createEnrichmentField(
               tableId as TableId,
               'LinkedIn Profile',
               {
-                actionKey: linkedin.actionKey,
-                actionPackageId: linkedin.actionPackageId,
-                authAccountId: resolveAuthAccount(linkedin, {}).accountId,
-                inputsBinding: [{ name: 'domain', formulaText: `{{${domainFieldId}}}` }],
+                actionKey: linkedinPage.actionKey,
+                actionPackageId: linkedinPage.actionPackageId,
+                authAccountId: resolveAuthAccount(linkedinPage, {}).accountId,
+                inputsBinding: [{ name: 'url', formulaText: `{{${domainFieldId}}}` }],
               }
             );
             createdFields.push('LinkedIn Profile');
