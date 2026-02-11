@@ -12,46 +12,11 @@
 
 ---
 
-## Business Context
-
-### Ideal Customer Profile (ICP)
-
-**Company Fit:**
-- Industry: B2B SaaS, DevTools, MarTech
-- Size: 50-500 employees (growth stage)
-- Funding: Series A-C preferred
-- Geography: US, UK, Canada, Western Europe
-
-**Contact Fit:**
-- Titles: VP/Director/Head of Sales, Marketing, RevOps, Growth
-- Seniority: Manager+ (no individual contributors)
-
-**Disqualify:**
-- Company < 20 employees
-- No website or domain unreachable
-- Consulting/agency
-- Government/education
-
-### Workflow Playbooks
-
-**Outbound Prospecting:**
-1. Source companies → 2. Enrich company → 3. Find decision makers → 4. Get work emails (waterfall) → 5. Validate emails → 6. Score leads → 7. Push to sequence
-
-**Inbound Lead Enrichment:**
-1. Email from form → 2. Enrich person → 3. Enrich company → 4. Score against ICP → 5. Route to Sales or Nurture
-
-### Connected Integrations
-- CRM: HubSpot, Salesforce
-- Sequences: Instantly, HubSpot sequences
-- Slack: #new-leads channel
-
----
-
 ## Project Overview
 
-Clay MCP server providing 73 tools for full Clay table automation via reverse-engineered v3 API.
+Clay MCP server providing 73 tools for full Clay table automation via Clay's v3 API.
 
-**GitHub:** https://github.com/shanefirek/clay-mcp
+**GitHub:** https://github.com/shanefirek/clay-mcp-public
 
 ### Quick Reference: Available Tools
 
