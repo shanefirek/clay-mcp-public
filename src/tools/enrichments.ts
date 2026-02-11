@@ -1127,4 +1127,82 @@ export function registerEnrichmentTools(
       }
     }
   );
+
+  /**
+   * clay_create_subroutine_field - Create a subroutine (sub-table) field
+   */
+  server.registerTool(
+    'clay_create_subroutine_field',
+    {
+      title: 'Create Subroutine Field',
+      description:
+        'Create a subroutine field that calls into a separate Clay table to run its enrichment chain. The target table must already exist with a source. Pass an input mapping of target column names to source field formulas.',
+      inputSchema: {
+        tableId: tableId(),
+        name: nonEmptyString.describe('Column name'),
+        subroutineTableId: z
+          .string()
+          .describe('Table ID (t_xxx) of the subroutine table to call'),
+        subroutineSourceId: z
+          .string()
+          .describe('Source ID (s_xxx) of the subroutine table\'s source'),
+        inputMapping: z
+          .record(z.string())
+          .describe(
+            'Map of target table column names to source field formulas. Example: { "Email": "{{f_emailField}}", "Company": "{{f_companyField}}" }'
+          ),
+        conditionalRunFormula: z
+          .string()
+          .optional()
+          .describe(
+            'Formula that must be truthy for the subroutine to run. Example: "{{f_scoreField}} > 5"'
+          ),
+        runAsButton: z
+          .boolean()
+          .optional()
+          .describe('If true, the field becomes a manual trigger button instead of auto-running'),
+      },
+    },
+    async ({
+      tableId,
+      name,
+      subroutineTableId,
+      subroutineSourceId,
+      inputMapping,
+      conditionalRunFormula,
+      runAsButton,
+    }) => {
+      try {
+        const field = await client.createSubroutineField(
+          tableId as TableId,
+          name,
+          {
+            subroutineTableId,
+            subroutineSourceId,
+            inputMapping,
+            conditionalRunFormulaText: conditionalRunFormula,
+            runAsButton,
+          }
+        );
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(field, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Error creating subroutine field: ${(error as Error).message}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+  );
 }

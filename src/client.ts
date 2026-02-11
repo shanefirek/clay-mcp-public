@@ -1198,39 +1198,65 @@ export class ClayClient {
       actionKey: string;
       actionPackageId: string;
       authAccountId?: string | null;
-      inputsBinding: Array<{ name: string; formulaText?: string }>;
+      inputsBinding: Array<{ name: string; formulaText?: string; formulaMap?: Record<string, string> }>;
+      dataType?: string;
+      conditionalRunFormulaText?: string;
+      runAsButton?: boolean;
     }
   ): Promise<ClayField> {
-    const payload: {
-      type: 'action';
-      name: string;
-      typeSettings: {
-        dataTypeSettings: { type: string };
-        actionKey: string;
-        actionVersion: number;
-        actionPackageId: string;
-        authAccountId?: string;
-        inputsBinding: Array<{ name: string; formulaText?: string }>;
-      };
-    } = {
+    const payload: Record<string, unknown> = {
       type: 'action',
       name,
       typeSettings: {
-        dataTypeSettings: { type: 'text' },
+        dataTypeSettings: { type: config.dataType || 'text' },
         actionKey: config.actionKey,
         actionVersion: 1,
         actionPackageId: config.actionPackageId,
         inputsBinding: config.inputsBinding,
+        ...(config.conditionalRunFormulaText && { conditionalRunFormulaText: config.conditionalRunFormulaText }),
+        ...(config.runAsButton && { runAsButton: true }),
       },
     };
 
     // Only add authAccountId if it's a string (not null/undefined)
+    const ts = payload.typeSettings as Record<string, unknown>;
     if (typeof config.authAccountId === 'string') {
-      payload.typeSettings.authAccountId = config.authAccountId;
+      ts.authAccountId = config.authAccountId;
     }
 
     const response = await this.request<{ field: ClayField }>('POST', `/tables/${tableId}/fields`, payload);
     return response.field;
+  }
+
+  /**
+   * Create a subroutine field (execute-subroutine)
+   *
+   * Subroutines call into a separate Clay table that runs its own enrichment chain.
+   * The target table must already exist with a webhook/API source.
+   */
+  async createSubroutineField(
+    tableId: TableId,
+    name: string,
+    config: {
+      subroutineTableId: string;
+      subroutineSourceId: string;
+      inputMapping: Record<string, string>; // { "Target Column Name": "{{f_sourceFieldId}}" }
+      conditionalRunFormulaText?: string;
+      runAsButton?: boolean;
+    }
+  ): Promise<ClayField> {
+    return this.createEnrichmentField(tableId, name, {
+      actionKey: 'execute-subroutine',
+      actionPackageId: 'b1ab3d5d-b0db-4b30-9251-3f32d8b103c1',
+      dataType: 'json',
+      inputsBinding: [
+        { name: 'sourceId', formulaText: `"${config.subroutineSourceId}"` },
+        { name: 'tableId', formulaText: `"${config.subroutineTableId}"` },
+        { name: 'inputs', formulaMap: config.inputMapping },
+      ],
+      conditionalRunFormulaText: config.conditionalRunFormulaText,
+      runAsButton: config.runAsButton,
+    });
   }
 
   // ==================== DISCOVERY OPERATIONS ====================
@@ -1306,10 +1332,11 @@ export class ClayClient {
   /**
    * Create a new workbook in a workspace
    */
-  async createWorkbook(name: string, workspaceId: number): Promise<unknown> {
+  async createWorkbook(name: string, workspaceId: number, parentFolderId?: string): Promise<unknown> {
     return this.request<unknown>('POST', '/workbooks', {
       name,
       workspaceId,
+      ...(parentFolderId && { parentFolderId }),
     });
   }
 

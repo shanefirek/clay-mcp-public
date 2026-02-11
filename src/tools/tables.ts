@@ -156,11 +156,12 @@ export function registerTableTools(server: McpServer, client: ClayClient): void 
       inputSchema: {
         name: z.string().describe('Name for the new workbook'),
         workspaceId: z.number().describe('Workspace ID (numeric)'),
+        parentFolderId: z.string().optional().describe('Folder ID (f_xxx) to create the workbook in'),
       },
     },
-    async ({ name, workspaceId }) => {
+    async ({ name, workspaceId, parentFolderId }) => {
       try {
-        const result = await client.createWorkbook(name, workspaceId);
+        const result = await client.createWorkbook(name, workspaceId, parentFolderId);
         return {
           content: [
             {
