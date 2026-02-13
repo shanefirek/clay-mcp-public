@@ -42,14 +42,14 @@ export function registerSourceTools(server: McpServer, client: ClayClient): void
         });
 
         // Get the source to retrieve the webhook URL
-        const table = result as { id: string };
+        const { table } = result as { table: { id: string } };
         const sources = await client.getSources(table.id as TableId);
 
         return {
           content: [
             {
               type: 'text' as const,
-              text: JSON.stringify({ table: result, sources }, null, 2),
+              text: JSON.stringify({ table, sources }, null, 2),
             },
           ],
         };
