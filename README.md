@@ -2,7 +2,7 @@
 
 Give Claude full control over your Clay tables via the Model Context Protocol.
 
-> **Note:** This is an unofficial integration using Clay's internal API (reverse-engineered). Not affiliated with Clay.
+> **Note:** This is an unofficial integration using Clay's internal API. Not affiliated with Clay.
 
 ## What It Does
 
@@ -17,7 +17,6 @@ Give Claude full control over your Clay tables via the Model Context Protocol.
 
 - **[Agent Guide](docs/AGENT_GUIDE.md)** - Best practices for AI agents using this MCP
 - **[Tools Reference](docs/TOOLS_SUMMARY.md)** - Complete list of 73 tools
-- **[API Reference](docs/CLAY_API_REFERENCE.md)** - Reverse-engineered Clay API
 
 ## Quick Start
 
@@ -203,11 +202,6 @@ CLAY_HUNTER_ACCOUNT_ID=aa_your_account_id
 CLAY_FINDYMAIL_ACCOUNT_ID=aa_your_account_id
 CLAY_APOLLO_OAUTH_ACCOUNT_ID=aa_your_account_id
 CLAY_BUILT_WITH_ACCOUNT_ID=aa_your_account_id
-```
-
-Find your account IDs:
-```bash
-npx ts-node scripts/discover-clay-accounts.ts
 ```
 
 Or use the `useOwnAccount` parameter:
@@ -447,8 +441,7 @@ clay-mcp/
 │   └── types/                # TypeScript types
 ├── docs/
 │   ├── AGENT_GUIDE.md        # Best practices for AI agents
-│   ├── TOOLS_SUMMARY.md      # All 73 tools documented
-│   └── CLAY_API_REFERENCE.md # Reverse-engineered API
+│   └── TOOLS_SUMMARY.md      # All 73 tools documented
 └── dist/                     # Compiled output
 ```
 
@@ -532,9 +525,8 @@ If you are an AI agent or a person configuring this MCP for an agent:
 
 ## Disclaimer
 
-This is an **unofficial** integration using Clay's **internal API**.
+This is an **unofficial** integration using Clay's internal API.
 
-- The API may change without notice
 - Requires session cookies (not official API keys)
 - Use at your own risk
 - Not affiliated with or endorsed by Clay

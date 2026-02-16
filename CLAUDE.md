@@ -2,19 +2,15 @@
 
 ## For Agents: Read This First
 
-**Before writing any code that uses ClayClient, you MUST read:**
-- `docs/CLIENT_API.md` - Complete API reference with method signatures and response structures
-
-**Critical gotchas:**
-1. `getTable()` returns nested data: fields are at `.table.fields`, NOT `.fields`
-2. `getTableFields()` exists as a lighter alternative to `getTable()` for just fields
-3. `createHttpApiField()` takes a config OBJECT, not positional params
+**Key docs:**
+- `docs/AGENT_GUIDE.md` - Best practices for using the MCP tools
+- `docs/TOOLS_SUMMARY.md` - Complete list of all 73 tools
 
 ---
 
 ## Project Overview
 
-Clay MCP server providing 73 tools for full Clay table automation via Clay's v3 API.
+Clay MCP server providing 73 tools for full Clay table automation.
 
 **GitHub:** https://github.com/shanefirek/clay-mcp-public
 
@@ -52,20 +48,8 @@ Pruned 10 broken tools that used old API approaches (`sourceSettings`, `POST /so
 - `clay_create_find_people_field`, `clay_create_find_companies_field`
 - `clay_add_find_companies_source`, `clay_add_find_people_source`
 
-### API Notes
-- Clay's internal API is reverse-engineered and may change
-- Wizard endpoints (`/workspaces/{id}/wizard/evaluate-step`) are the only reliable way to create tables with data sources
+### Notes
 - Session cookies expire - refresh from Chrome DevTools when you get 401s
-
----
-
-### Key Files
-
-| File | Purpose |
-|------|---------|
-| `src/client.ts` | ClayClient class - all API methods |
-| `src/enrichments/registry.json` | 85+ enrichment provider configs |
-| `docs/CLIENT_API.md` | **Complete API reference** |
 
 ---
 
@@ -75,19 +59,13 @@ Pruned 10 broken tools that used old API approaches (`sourceSettings`, `POST /so
 npm run build          # Build TypeScript
 npm run dev            # Watch mode
 npm test               # Run tests
-
-# Test with session cookie
-CLAY_SESSION_COOKIE='s%3A...' npm test -- tests/mcp-tools.integration.test.ts
 ```
 
 ---
 
-## Documentation Index
+## Documentation
 
 | Document | Content |
 |----------|---------|
-| `docs/CLIENT_API.md` | **Primary reference** - All ClayClient methods with signatures and response shapes |
-| `docs/CLAYGENT_API.md` | Claygent field configuration details |
-| `docs/METAPROMPTER_API.md` | Prompt generation API |
-| `docs/enrichment-auth-guide.md` | Auth account configuration |
-| `src/enrichments/registry.json` | All enrichment provider actionKeys and packageIds |
+| `docs/AGENT_GUIDE.md` | Best practices for AI agents using this MCP |
+| `docs/TOOLS_SUMMARY.md` | Complete list of all 73 tools |
