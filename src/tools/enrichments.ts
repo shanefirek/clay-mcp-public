@@ -11,6 +11,52 @@ import type { TableId, FieldId, RecordId, ActionConfig } from '../types/clay.js'
 import { getAllProviders, findProviderByName, getProvidersByCategory, resolveAuthAccount } from '../enrichments/index.js';
 import { tableId, fieldId, fieldIdSchema, recordIdSchema, nonEmptyString, authAccountId } from '../validation.js';
 
+/**
+ * Action keys whose specific inputs should always be treated as literal strings
+ * (wrapped in "..." instead of {{...}}) even when passed via inputMapping.
+ */
+const KNOWN_LITERAL_INPUTS: Record<string, Set<string>> = {
+  'lookup-field-in-other-table-new-ui': new Set(['tableId', 'targetColumn', 'filterOperator']),
+};
+
+/**
+ * Build inputsBinding array from inputMapping and literalInputs.
+ * Exported for testing.
+ */
+export function buildInputsBinding(
+  inputMapping: Record<string, string>,
+  literalInputs: Record<string, string> | undefined,
+  actionKey: string,
+): Array<{ name: string; formulaText: string }> {
+  const effectiveLiterals: Record<string, string> = { ...(literalInputs || {}) };
+  const knownLiterals = KNOWN_LITERAL_INPUTS[actionKey];
+
+  const allInputNames = new Set([
+    ...Object.keys(inputMapping),
+    ...Object.keys(effectiveLiterals),
+  ]);
+
+  const bindings: Array<{ name: string; formulaText: string }> = [];
+  for (const name of allInputNames) {
+    if (effectiveLiterals[name] !== undefined) {
+      const val = effectiveLiterals[name];
+      const formulaText = val.startsWith('"') ? val : `"${val}"`;
+      bindings.push({ name, formulaText });
+    } else if (inputMapping[name] !== undefined) {
+      const value = inputMapping[name];
+      if (knownLiterals?.has(name) && !value.startsWith('{{') && !value.startsWith('"')) {
+        bindings.push({ name, formulaText: `"${value}"` });
+      } else {
+        const formulaText = value.startsWith('{{') || value.startsWith('"')
+          ? value
+          : `{{${value}}}`;
+        bindings.push({ name, formulaText });
+      }
+    }
+  }
+  return bindings;
+}
+
 export function registerEnrichmentTools(
   server: McpServer,
   client: ClayClient
@@ -298,7 +344,11 @@ export function registerEnrichmentTools(
     {
       title: 'Create Enrichment Field',
       description:
-        'Create an enrichment column using a provider from the registry. Use clay_list_enrichments to see available providers. Input mapping connects your table fields to the enrichment inputs. By default uses Clay-managed accounts (Clay credits) when available.',
+        'Create an enrichment column using a provider from the registry. Use clay_list_enrichments to see available providers. ' +
+        'inputMapping values are treated as field references (wrapped in {{...}}). ' +
+        'literalInputs values are treated as literal strings (wrapped in "..."). ' +
+        'If the same key appears in both, literalInputs wins. ' +
+        'For known actions (e.g. lookup-field-in-other-table-new-ui), certain inputs like tableId and targetColumn are auto-detected as literals even if passed via inputMapping.',
       inputSchema: {
         tableId: tableId(),
         enrichmentName: nonEmptyString.describe(
@@ -308,7 +358,13 @@ export function registerEnrichmentTools(
         inputMapping: z
           .record(z.string())
           .describe(
-            'Map enrichment inputs to field IDs. Keys are input names (e.g., "query", "email"), values are field IDs (e.g., "f_xxx") or formulas'
+            'Map enrichment inputs to field references. Keys are input names (e.g., "query", "email"), values are field IDs (e.g., "f_xxx") or formulas. Values are wrapped in {{...}} automatically.'
+          ),
+        literalInputs: z
+          .record(z.string())
+          .optional()
+          .describe(
+            'Map enrichment inputs to literal string values (not field references). Keys are input names, values are literal strings wrapped in "..." automatically. Use for config values like tableId, targetColumn, filterOperator.'
           ),
         useOwnAccount: z
           .boolean()
@@ -319,7 +375,7 @@ export function registerEnrichmentTools(
         authAccountId: authAccountId('Specific auth account ID to use (e.g., "aa_xxx"). Overrides useOwnAccount.').optional(),
       },
     },
-    async ({ tableId, enrichmentName, fieldName, inputMapping, useOwnAccount, authAccountId }) => {
+    async ({ tableId, enrichmentName, fieldName, inputMapping, literalInputs, useOwnAccount, authAccountId }) => {
       try {
         // Find the provider in registry
         const result = await findProviderByName(enrichmentName);
@@ -339,17 +395,18 @@ export function registerEnrichmentTools(
 
         const { provider } = result;
 
-        // Build inputsBinding from the mapping
-        const inputsBinding: Array<{ name: string; formulaText?: string }> = Object.entries(inputMapping).map(([name, value]) => {
-          // If value looks like a field ID, wrap in formula syntax
-          const formulaText = value.startsWith('{{') || value.startsWith('"')
-            ? value
-            : `{{${value}}}`;
-          return { name, formulaText };
-        });
+        // Build inputsBinding using extracted helper
+        const inputsBinding: Array<{ name: string; formulaText?: string }> = buildInputsBinding(
+          inputMapping,
+          literalInputs,
+          provider.actionKey,
+        );
 
         // Add empty bindings for any other expected inputs not in mapping
-        const mappedNames = new Set(Object.keys(inputMapping));
+        const mappedNames = new Set([
+          ...Object.keys(inputMapping),
+          ...Object.keys(literalInputs || {}),
+        ]);
         for (const inputName of provider.inputFields || []) {
           if (!mappedNames.has(inputName)) {
             inputsBinding.push({ name: inputName });

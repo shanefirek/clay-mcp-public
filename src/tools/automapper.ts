@@ -1110,13 +1110,38 @@ export function registerAutoMapperTools(
           }
         }
 
-        // Generate ready-to-use inputMapping
+        // Known literal inputs for specific action keys
+        const KNOWN_LITERAL_INPUTS: Record<string, Set<string>> = {
+          'lookup-field-in-other-table-new-ui': new Set(['tableId', 'targetColumn', 'filterOperator']),
+        };
+
+        const knownLiterals = KNOWN_LITERAL_INPUTS[enrichmentName];
+
+        // Generate ready-to-use inputMapping and literalInputs
         const inputMapping: Record<string, string> = {};
+        const literalInputs: Record<string, string> = {};
         for (const [inputName, match] of Object.entries(mapping)) {
-          inputMapping[inputName] = match.fieldId;
+          if (knownLiterals?.has(inputName)) {
+            // This input should be a literal value, not a field reference
+            // Use the field name as a hint that user needs to provide a real value
+            literalInputs[inputName] = `<provide ${inputName} value>`;
+          } else {
+            inputMapping[inputName] = match.fieldId;
+          }
         }
 
         const canCreate = !unmapped.some(u => u.required);
+
+        // Build usage params - include literalInputs only if non-empty
+        const usageParams: Record<string, any> = {
+          tableId,
+          enrichmentName,
+          fieldName: enrichment.displayName || enrichmentName,
+          inputMapping,
+        };
+        if (Object.keys(literalInputs).length > 0) {
+          usageParams.literalInputs = literalInputs;
+        }
 
         return {
           content: [
@@ -1134,16 +1159,12 @@ export function registerAutoMapperTools(
                   unmapped,
                   readyToUse: {
                     inputMapping,
+                    ...(Object.keys(literalInputs).length > 0 ? { literalInputs } : {}),
                   },
                   usage: canCreate
                     ? {
                         tool: 'clay_create_enrichment',
-                        params: {
-                          tableId,
-                          enrichmentName,
-                          fieldName: enrichment.displayName || enrichmentName,
-                          inputMapping,
-                        },
+                        params: usageParams,
                       }
                     : {
                         error: 'Missing required inputs',
