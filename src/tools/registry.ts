@@ -118,24 +118,88 @@ export function registerRegistryTools(
   );
 
   /**
-   * clay_get_registry - Get the full enrichment provider registry
+   * clay_get_registry - Get the enrichment provider registry (summary or filtered by category)
    */
   server.registerTool(
     'clay_get_registry',
     {
       title: 'Get Enrichment Registry',
       description:
-        'Get the full local enrichment provider registry. Shows all known providers organized by category.',
-      inputSchema: {},
+        'Get the enrichment provider registry. Without a category filter, returns a compact summary (category names, action counts, and action keys). With a category filter, returns full details for that category. Use clay_get_action_schema for full details on a specific action.',
+      inputSchema: {
+        category: z
+          .string()
+          .optional()
+          .describe(
+            'Optional category to filter by (e.g., "email-finders", "crm"). If omitted, returns a summary of all categories with action keys.'
+          ),
+      },
     },
-    async () => {
+    async ({ category }) => {
       try {
         const registry = await getRegistry();
+
+        // If category specified, return full details for that category
+        if (category) {
+          const providers = registry[category];
+          if (!providers) {
+            const categories = Object.keys(registry).filter(
+              (k) => k !== '_meta'
+            );
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text: `Category "${category}" not found. Available categories: ${categories.join(', ')}`,
+                },
+              ],
+              isError: true,
+            };
+          }
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: JSON.stringify({ [category]: providers }, null, 2),
+              },
+            ],
+          };
+        }
+
+        // Return compact summary: category -> { count, actionKeys[] }
+        const summary: Record<
+          string,
+          { count: number; actions: string[] }
+        > = {};
+        let totalActions = 0;
+        for (const [cat, providers] of Object.entries(registry)) {
+          if (cat === '_meta') continue;
+          const actionKeys = Object.keys(
+            providers as Record<string, unknown>
+          );
+          summary[cat] = {
+            count: actionKeys.length,
+            actions: actionKeys,
+          };
+          totalActions += actionKeys.length;
+        }
+
         return {
           content: [
             {
               type: 'text' as const,
-              text: JSON.stringify(registry, null, 2),
+              text: JSON.stringify(
+                {
+                  _meta: {
+                    totalCategories: Object.keys(summary).length,
+                    totalActions,
+                    hint: 'Use category parameter to get full details for a category, or clay_get_action_schema for a specific action.',
+                  },
+                  categories: summary,
+                },
+                null,
+                2
+              ),
             },
           ],
         };
