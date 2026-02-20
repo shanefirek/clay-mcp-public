@@ -445,8 +445,18 @@ export class ClayClient {
 
   /**
    * Delete a field from a table
+   * Renames the field first to free up the name (Clay soft-deletes keep names reserved)
    */
   async deleteField(tableId: TableId, fieldId: FieldId): Promise<void> {
+    // Rename before delete to free up the original name for reuse
+    // Clay soft-deletes fields, keeping the name reserved in the table namespace
+    try {
+      await this.updateField(tableId, fieldId, {
+        name: `_deleted_${Date.now()}`,
+      });
+    } catch {
+      // If rename fails, still proceed with delete
+    }
     await this.request<Record<string, never>>(
       'DELETE',
       `/tables/${tableId}/fields/${fieldId}`
