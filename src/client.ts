@@ -274,10 +274,12 @@ export class ClayClient {
    * Get record IDs for a view
    */
   async getViewRecordIds(tableId: TableId, viewId: ViewId): Promise<string[]> {
-    return this.request<string[]>(
+    const response = await this.request<{ results: string[] } | string[]>(
       'GET',
       `/tables/${tableId}/views/${viewId}/records/ids`
     );
+    // API returns { results: [...] }, not a raw array
+    return Array.isArray(response) ? response : (response as { results: string[] }).results || [];
   }
 
   // ==================== ENRICHMENT OPERATIONS ====================
