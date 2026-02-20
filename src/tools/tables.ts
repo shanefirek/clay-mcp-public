@@ -286,15 +286,26 @@ export function registerTableTools(server: McpServer, client: ClayClient): void 
     {
       title: 'Search Enrichments',
       description:
-        'Search Clay\'s enrichment catalog to find available data providers (email finders, company enrichment, etc.).',
+        'Search Clay\'s enrichment catalog to find available data providers (email finders, company enrichment, etc.). Workspace ID is auto-resolved if omitted.',
       inputSchema: {
-        workspaceId: z.string().describe('Workspace ID (numeric string)'),
+        workspaceId: z.string().optional().describe('Workspace ID (numeric string). Auto-resolved from session if omitted.'),
         query: z.string().describe('Search query (e.g., "find email", "company data", "hubspot")'),
       },
     },
-    async ({ workspaceId, query }) => {
+    async ({ workspaceId: wsId, query }) => {
       try {
-        const results = await client.searchEnrichments(workspaceId as WorkspaceId, query);
+        let resolvedWsId = wsId;
+        if (!resolvedWsId) {
+          const wsRes = (await client.getMyWorkspaces()) as {
+            results?: Array<{ id: number }>;
+          };
+          const workspaces = wsRes.results || [];
+          if (workspaces.length === 0) {
+            throw new Error('No workspaces found for this session. Provide workspaceId explicitly.');
+          }
+          resolvedWsId = String(workspaces[0].id);
+        }
+        const results = await client.searchEnrichments(resolvedWsId as WorkspaceId, query);
         return {
           content: [
             {

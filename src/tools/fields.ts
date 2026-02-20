@@ -84,10 +84,30 @@ export function registerFieldTools(server: McpServer, client: ClayClient): void 
     },
     async ({ tableId, fieldId, updates }) => {
       try {
+        let mergedUpdates = updates as Record<string, unknown>;
+
+        // Deep-merge typeSettings with existing config to avoid wiping actionKey, etc.
+        if (mergedUpdates.typeSettings) {
+          const tableData = (await client.getTable(tableId as TableId)) as {
+            table?: { fields?: Array<{ id: string; typeSettings?: Record<string, unknown> }> };
+          };
+          const fields = tableData.table?.fields || [];
+          const currentField = fields.find((f) => f.id === fieldId);
+          if (currentField?.typeSettings) {
+            mergedUpdates = {
+              ...mergedUpdates,
+              typeSettings: {
+                ...currentField.typeSettings,
+                ...(mergedUpdates.typeSettings as Record<string, unknown>),
+              },
+            };
+          }
+        }
+
         const field = await client.updateField(
           tableId as TableId,
           fieldId as FieldId,
-          updates as Record<string, unknown>
+          mergedUpdates
         );
         return {
           content: [
