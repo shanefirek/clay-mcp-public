@@ -71,7 +71,7 @@ export function registerFieldTools(server: McpServer, client: ClayClient): void 
     {
       title: 'Update Field',
       description:
-        'Update an existing field\'s configuration (name, typeSettings, inputsBinding, etc.) without deleting and recreating it. Preserves downstream references. Use clay_get_field_config first to see the current config. Note: This uses a reverse-engineered PATCH endpoint — may not work for all field types.',
+        'Update an existing field\'s configuration (name, typeSettings, inputsBinding, etc.) without deleting and recreating it. Preserves downstream references. Use clay_get_field_config first to see the current config. Note: "Field name must be unique" errors can be caused by live fields with the same name OR ghost fields (soft-deleted but name still reserved). For ghosts, try a slightly different name.',
       inputSchema: {
         tableId: tableId(),
         fieldId: fieldId(),

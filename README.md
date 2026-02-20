@@ -242,95 +242,15 @@ Ask Claude things like:
 
 ## Configuring for Your Organization
 
-The MCP provides tools, but Claude needs **business context** to make good decisions. Add a `CLAUDE.md` file to your project (or system prompt) with your org's specific configuration:
+The MCP provides tools, but Claude needs **business context** to make good decisions. Add a `CLAUDE.md` file to your project (or system prompt) with your org's specific configuration.
 
-### ICP Definition
+Consider defining:
 
-Tell Claude who you're targeting:
-
-```markdown
-## Ideal Customer Profile
-
-**Company Fit:**
-- Industry: B2B SaaS, DevTools, MarTech
-- Size: 50-500 employees
-- Funding: Series A-C
-- Geography: US, UK, Western Europe
-
-**Contact Fit:**
-- Titles: VP/Director of Sales, Marketing, RevOps
-- Seniority: Manager+ (no ICs for outbound)
-
-**Disqualify:**
-- < 20 employees
-- Agencies/consultancies
-- Government/education
-```
-
-### Preferred Enrichments
-
-Specify which providers to use and in what order:
-
-```markdown
-## Enrichment Preferences
-
-**Email Finding (in order):**
-1. Findymail (best accuracy)
-2. Hunter (fallback)
-3. LeadMagic (last resort)
-
-**Company Data:** Apollo (use Clay credits)
-**Person Data:** Apollo → Clearbit
-**Validation:** Always run Findymail validation before sequences
-
-**Never use:** [list any providers to avoid]
-```
-
-### Workflow Standards
-
-Define your quality gates and processes:
-
-```markdown
-## Workflow Rules
-
-1. **Always validate emails** before pushing to sequences
-2. **Score all leads** before CRM push:
-   - Score > 70 → Route to Sales
-   - Score < 70 → Nurture sequence
-3. **Research before outreach** - run Claygent for personalization
-4. **Naming convention:**
-   - Tables: `{YYYY-MM} - {Source} - {Purpose}`
-   - Views: `Ready to Sequence`, `Needs Review`, `Disqualified`
-```
-
-### Signal Weights
-
-For lead scoring:
-
-```markdown
-## Scoring Signals
-
-| Signal | Weight | Reason |
-|--------|--------|--------|
-| Recent funding | +30 | Budget available |
-| Hiring sales/marketing | +25 | Growth mode |
-| Uses competitor tech | +20 | In-market |
-| Title matches ICP | +20 | Right person |
-| No LinkedIn profile | -20 | Hard to reach |
-| Catch-all email | -15 | Deliverability risk |
-```
-
-### Connected Integrations
-
-List your destinations:
-
-```markdown
-## Integrations
-
-- **CRM:** HubSpot (primary)
-- **Sequences:** Instantly (outbound), HubSpot (inbound)
-- **Notifications:** Slack #new-leads
-```
+- **ICP (Ideal Customer Profile)** — Company fit (industry, size, funding stage, geography), contact fit (titles, seniority), and disqualification criteria
+- **Enrichment preferences** — Which providers to use and in what priority order for email finding, company data, person data, and validation
+- **Workflow standards** — Quality gates (e.g., always validate emails before sequencing), lead scoring thresholds, naming conventions for tables and views
+- **Scoring signals** — What signals matter for lead scoring and how much weight each carries
+- **Connected integrations** — Which CRM, sequence tool, and notification channels to push data to
 
 This context helps Claude choose the right tools, providers, and workflows for your specific business.
 
