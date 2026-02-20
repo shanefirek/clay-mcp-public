@@ -2,7 +2,7 @@
  * MCP Tools Integration Tests
  *
  * These tests hit the REAL Clay API using CLAY_SESSION_COOKIE from environment.
- * Tests against table: t_0t8zm0wGn9TpMAHCP87
+ * Tests against a designated test table (set TEST_TABLE_ID and WORKSPACE_ID below)
  *
  * Run with: npm test -- mcp-tools.integration.test.ts
  */
@@ -11,8 +11,9 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { ClayClient } from '../src/client.js';
 import { readFile } from 'fs/promises';
 
-const TEST_TABLE_ID = 't_0t8zm0wGn9TpMAHCP87' as `t_${string}`;
-const WORKSPACE_ID = '48289';
+// Set these to your own test table and workspace before running integration tests
+const TEST_TABLE_ID = (process.env.TEST_TABLE_ID || 't_yourTestTableId') as `t_${string}`;
+const WORKSPACE_ID = process.env.TEST_WORKSPACE_ID || '12345';
 
 // Helper type for Clay API response with nested structure
 interface ClayTableResponse {

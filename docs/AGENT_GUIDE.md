@@ -8,7 +8,7 @@ All Clay IDs follow strict patterns. Invalid formats will be rejected:
 
 | Type | Format | Example |
 |------|--------|---------|
-| Table ID | `t_` + alphanumeric | `t_0t8zm0wGn9TpMAHCP87` |
+| Table ID | `t_` + alphanumeric | `t_abc123XYZ` |
 | Field ID | `f_` + alphanumeric | `f_abc123XYZ` |
 | View ID | `gv_` + alphanumeric | `gv_defaultView1` |
 | Record ID | `r_` + alphanumeric | `r_record123` |
