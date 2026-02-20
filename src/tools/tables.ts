@@ -63,14 +63,32 @@ export function registerTableTools(server: McpServer, client: ClayClient): void 
     {
       title: 'Get Clay Table',
       description:
-        'Get table schema including all columns, formulas, enrichment configs, and views',
+        'Get table schema including all columns and views. By default returns compact field info (id, name, type). Set includeFieldConfigs=true for full typeSettings (formulas, enrichment configs, inputsBinding). Use clay_get_field_config to inspect a single field.',
       inputSchema: {
         tableId: tableId(),
+        includeFieldConfigs: z
+          .boolean()
+          .optional()
+          .describe('Include full typeSettings for each field (default: false). Warning: can be very large for enrichment-heavy tables.'),
       },
     },
-    async ({ tableId: tblId }) => {
+    async ({ tableId: tblId, includeFieldConfigs = false }) => {
       try {
         const table = await client.getTable(tblId as TableId);
+
+        if (!includeFieldConfigs) {
+          // Strip typeSettings from fields for compact response
+          const tableData = table as unknown as Record<string, unknown>;
+          const inner = (tableData.table || tableData) as Record<string, unknown>;
+          if (inner.fields && Array.isArray(inner.fields)) {
+            inner.fields = (inner.fields as Array<Record<string, unknown>>).map((f) => ({
+              id: f.id,
+              name: f.name,
+              type: f.type,
+            }));
+          }
+        }
+
         return {
           content: [
             {
@@ -595,6 +613,137 @@ export function registerTableTools(server: McpServer, client: ClayClient): void 
             {
               type: 'text' as const,
               text: `Error deleting view: ${(error as Error).message}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ==================== FIELD INSPECTION TOOLS ====================
+
+  /**
+   * clay_get_field_config - Get full config for a single field
+   */
+  server.registerTool(
+    'clay_get_field_config',
+    {
+      title: 'Get Field Config',
+      description:
+        'Get the full configuration of a single field including typeSettings, inputsBinding, actionKey, etc. Use this to inspect enrichment configs, formula text, or AI prompts on a specific field without fetching the entire table schema.',
+      inputSchema: {
+        tableId: tableId(),
+        fieldId: fieldId(),
+      },
+    },
+    async ({ tableId: tblId, fieldId: fldId }) => {
+      try {
+        const table = await client.getTable(tblId as TableId);
+        const tableData = table as unknown as Record<string, unknown>;
+        const inner = (tableData.table || tableData) as Record<string, unknown>;
+        const fields = (inner.fields || []) as Array<Record<string, unknown>>;
+
+        const field = fields.find((f) => f.id === fldId);
+        if (!field) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Field ${fldId} not found in table ${tblId}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(field, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Error getting field config: ${(error as Error).message}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  /**
+   * clay_list_table_enrichments - List enrichment fields configured on a table
+   */
+  server.registerTool(
+    'clay_list_table_enrichments',
+    {
+      title: 'List Table Enrichments',
+      description:
+        'List all enrichment/action fields configured on a table. Returns a compact summary of each enrichment field including its fieldId, name, actionKey, and input bindings. Much more useful than clay_list_enrichments (global registry) when you want to know what\'s already configured on a specific table.',
+      inputSchema: {
+        tableId: tableId(),
+      },
+    },
+    async ({ tableId: tblId }) => {
+      try {
+        const table = await client.getTable(tblId as TableId);
+        const tableData = table as unknown as Record<string, unknown>;
+        const inner = (tableData.table || tableData) as Record<string, unknown>;
+        const fields = (inner.fields || []) as Array<Record<string, unknown>>;
+
+        const enrichmentFields = fields
+          .filter((f) => f.type === 'action')
+          .map((f) => {
+            const ts = (f.typeSettings || {}) as Record<string, unknown>;
+            const inputsBinding = (ts.inputsBinding || []) as Array<Record<string, unknown>>;
+
+            // Build compact inputs summary
+            const inputs = inputsBinding
+              .filter((b) => b.formulaText || b.formulaMap)
+              .map((b) => {
+                const entry: Record<string, unknown> = { name: b.name };
+                if (b.formulaText) entry.formulaText = b.formulaText;
+                if (b.formulaMap) entry.formulaMap = b.formulaMap;
+                return entry;
+              });
+
+            const result: Record<string, unknown> = {
+              fieldId: f.id,
+              name: f.name,
+              actionKey: ts.actionKey,
+              actionPackageId: ts.actionPackageId,
+              inputs,
+            };
+            if (ts.authAccountId) result.authAccountId = ts.authAccountId;
+            return result;
+          });
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                tableId: tblId,
+                enrichmentCount: enrichmentFields.length,
+                enrichments: enrichmentFields,
+              }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Error listing table enrichments: ${(error as Error).message}`,
             },
           ],
           isError: true,

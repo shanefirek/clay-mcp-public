@@ -8,7 +8,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod';
 import { ClayClient } from '../client.js';
 import type { TableId, ViewId, RecordId } from '../types/clay.js';
-import { tableId, viewId, recordId, recordIdSchema } from '../validation.js';
+import { tableId, viewId, recordId, recordIdSchema, fieldIdSchema } from '../validation.js';
 
 export function registerRecordTools(server: McpServer, client: ClayClient): void {
   /**
@@ -70,18 +70,53 @@ export function registerRecordTools(server: McpServer, client: ClayClient): void
     'clay_get_record',
     {
       title: 'Get Clay Record',
-      description: 'Get a single record by its ID',
+      description:
+        'Get a single record by its ID. By default strips externalContent blobs to keep response compact. Use fields param to return only specific field values.',
       inputSchema: {
         tableId: tableId(),
         recordId: recordId(),
+        fields: z
+          .array(fieldIdSchema)
+          .optional()
+          .describe('Only return these field IDs from the record cells (f_xxx format). If omitted, returns all fields.'),
+        includeExternalContent: z
+          .boolean()
+          .optional()
+          .describe('Include full externalContent blobs in each cell (default: false). These can be very large for enrichment fields.'),
       },
     },
-    async ({ tableId, recordId }) => {
+    async ({ tableId, recordId, fields, includeExternalContent = false }) => {
       try {
         const record = await client.getRecord(
           tableId as TableId,
           recordId as RecordId
         );
+
+        // Filter to requested fields
+        if (fields && fields.length > 0 && record.cells) {
+          const filtered: Record<string, unknown> = {};
+          for (const fid of fields) {
+            if (fid in record.cells) {
+              filtered[fid] = record.cells[fid as keyof typeof record.cells];
+            }
+          }
+          record.cells = filtered as typeof record.cells;
+        }
+
+        // Strip externalContent by default
+        if (!includeExternalContent && record.cells) {
+          for (const cell of Object.values(record.cells) as unknown as Array<Record<string, unknown>>) {
+            if (cell && cell.externalContent) {
+              // Keep only status and error from externalContent
+              const ext = cell.externalContent as Record<string, unknown>;
+              const compact: Record<string, unknown> = {};
+              if (ext.status !== undefined) compact.status = ext.status;
+              if (ext.error !== undefined) compact.error = ext.error;
+              cell.externalContent = compact;
+            }
+          }
+        }
+
         return {
           content: [
             {

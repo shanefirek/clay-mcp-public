@@ -64,6 +64,54 @@ export function registerFieldTools(server: McpServer, client: ClayClient): void 
   );
 
   /**
+   * clay_update_field - Update a field's configuration
+   */
+  server.registerTool(
+    'clay_update_field',
+    {
+      title: 'Update Field',
+      description:
+        'Update an existing field\'s configuration (name, typeSettings, inputsBinding, etc.) without deleting and recreating it. Preserves downstream references. Use clay_get_field_config first to see the current config. Note: This uses a reverse-engineered PATCH endpoint — may not work for all field types.',
+      inputSchema: {
+        tableId: tableId(),
+        fieldId: fieldId(),
+        updates: z
+          .record(z.unknown())
+          .describe(
+            'Partial field config to merge. Examples: { "name": "New Name" }, { "typeSettings": { "formulaText": "..." } }, { "typeSettings": { "inputsBinding": [...] } }'
+          ),
+      },
+    },
+    async ({ tableId, fieldId, updates }) => {
+      try {
+        const field = await client.updateField(
+          tableId as TableId,
+          fieldId as FieldId,
+          updates as Record<string, unknown>
+        );
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(field, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Error updating field: ${(error as Error).message}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  /**
    * clay_delete_field - Delete a field from a table
    */
   server.registerTool(

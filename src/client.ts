@@ -425,6 +425,25 @@ export class ClayClient {
   }
 
   /**
+   * Update a field's configuration (name, typeSettings, etc.)
+   * Uses PATCH on /tables/{tableId}/fields/{fieldId}
+   * Note: This is a reverse-engineered endpoint — may not be supported for all field types.
+   */
+  async updateField(
+    tableId: TableId,
+    fieldId: FieldId,
+    updates: Record<string, unknown>
+  ): Promise<ClayField> {
+    const response = await this.request<{ field: ClayField } | ClayField>(
+      'PATCH',
+      `/tables/${tableId}/fields/${fieldId}`,
+      updates
+    );
+    // Handle both { field: ... } and direct field response
+    return (response as { field: ClayField }).field || (response as ClayField);
+  }
+
+  /**
    * Delete a field from a table
    */
   async deleteField(tableId: TableId, fieldId: FieldId): Promise<void> {
