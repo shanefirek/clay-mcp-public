@@ -851,38 +851,21 @@ export class ClayClient {
       }
     }
 
-    // Build headers formula if provided
-    let headersFormula: string | undefined;
+    // Build headers formulaMap if provided
+    // Clay's headers input is an object type — it expects formulaMap (key-value pairs
+    // where each value is a formula expression), not a single stringified JSON blob.
+    let headersMap: Record<string, string> | undefined;
     if (config.headers && Object.keys(config.headers).length > 0) {
-      // Check if any header values have field references
-      const hasFieldRefs = Object.values(config.headers).some(v => v.includes('{'));
-
-      if (hasFieldRefs) {
-        // Build dynamic headers formula
-        const headerParts: string[] = ['"{'];
-        const entries = Object.entries(config.headers);
-
-        entries.forEach(([k, v], idx) => {
-          const converted = convertFieldRefs(v);
-          const separator = idx < entries.length - 1 ? ', ' : '';
-
-          if (converted.includes('{{')) {
-            // Has field reference - need to concatenate
-            headerParts.push(`"\\"${k}\\": \\"" + {{${converted.match(/{{([^}]+)}}/)?.[1]}}} + "\\"${separator}`);
-          } else {
-            // Plain value
-            headerParts.push(`"\\"${k}\\": \\"${v}\\"${separator}`);
-          }
-        });
-
-        headerParts.push('}"');
-        headersFormula = headerParts.join(' + ');
-      } else {
-        // Static headers - simple JSON string
-        const headerPairs = Object.entries(config.headers)
-          .map(([k, v]) => `\\"${k}\\": \\"${v}\\"`)
-          .join(', ');
-        headersFormula = `"{${headerPairs}}"`;
+      headersMap = {};
+      for (const [k, v] of Object.entries(config.headers)) {
+        const converted = convertFieldRefs(v);
+        if (converted !== v) {
+          // Has field references — converted is already a formula expression
+          headersMap[k] = converted;
+        } else {
+          // Static value — wrap in quotes so Clay evaluates it as a string literal
+          headersMap[k] = `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+        }
       }
     }
 
@@ -905,13 +888,14 @@ export class ClayClient {
     const inputsBinding: Array<{
       name: string;
       formulaText?: string;
+      formulaMap?: Record<string, string>;
       optional?: boolean;
     }> = [
       { name: 'method', formulaText: config.method ? `"${config.method}"` : undefined, optional: true },
       { name: 'url', formulaText: urlFormula, optional: false },
       { name: 'queryString', formulaText: queryFormula, optional: true },
       { name: 'body', formulaText: bodyFormula, optional: true },
-      { name: 'headers', formulaText: headersFormula, optional: true },
+      { name: 'headers', formulaMap: headersMap, optional: true },
       { name: 'fieldPaths', formulaText: config.responseFieldPaths ? `"${config.responseFieldPaths.join(',')}"` : undefined, optional: true },
       { name: 'removeNull', formulaText: config.removeNull !== false ? 'true' : 'false', optional: true },
       { name: 'returnResponseMetadata', formulaText: config.returnResponseMetadata ? 'true' : undefined, optional: true },
