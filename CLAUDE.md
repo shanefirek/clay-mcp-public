@@ -10,7 +10,7 @@
 
 ## Project Overview
 
-Clay MCP server providing 73 tools for full Clay table automation.
+Clay MCP server providing 74 tools for full Clay table automation.
 
 **GitHub:** https://github.com/shanefirek/clay-mcp-public
 
@@ -19,7 +19,7 @@ Clay MCP server providing 73 tools for full Clay table automation.
 | Category | Tools |
 |----------|-------|
 | Sourcing | `clay_wizard_find_companies`, `clay_wizard_find_people` |
-| Tables | `clay_list_tables`, `clay_get_table`, `clay_create_table`, `clay_duplicate_table`, `clay_export_table`, `clay_share_table` |
+| Tables | `clay_list_tables`, `clay_list_workbook_tables`, `clay_get_table`, `clay_create_table`, `clay_duplicate_table`, `clay_export_table`, `clay_share_table` |
 | Records | `clay_list_records`, `clay_create_record`, `clay_get_record`, `clay_batch_create_records`, `clay_update_record`, `clay_delete_records`, `clay_search_records` |
 | Fields | `clay_create_field`, `clay_create_text_field`, `clay_create_formula_field`, `clay_create_ai_field`, `clay_create_claygent_field`, `clay_create_http_api_field` |
 | Enrichments | `clay_create_enrichment`, `clay_create_email_waterfall`, `clay_create_phone_waterfall`, `clay_validate_emails`, `clay_enrich_company`, `clay_enrich_person` |

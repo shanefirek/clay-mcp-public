@@ -56,6 +56,49 @@ export function registerTableTools(server: McpServer, client: ClayClient): void 
   );
 
   /**
+   * clay_list_workbook_tables - List tables in a specific workbook
+   */
+  server.registerTool(
+    'clay_list_workbook_tables',
+    {
+      title: 'List Workbook Tables',
+      description:
+        'List all tables in a specific Clay workbook. Returns table IDs, names, and row counts. Use this when you know the workbook ID (wb_xxx) and want to discover tables within it, without listing the entire workspace.',
+      inputSchema: {
+        workbookId: workbookId('Workbook ID (wb_xxx format)'),
+      },
+    },
+    async ({ workbookId: wbId }) => {
+      try {
+        const tables = await client.getWorkbookTables(wbId) as Array<Record<string, unknown>>;
+        const compact = tables.map((t) => ({
+          id: t.id,
+          name: t.name,
+          rowCount: t.rowCount ?? t.numRows ?? t.row_count,
+        }));
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(compact, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Error listing workbook tables: ${(error as Error).message}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  /**
    * clay_get_table - Get table schema with all fields
    */
   server.registerTool(
