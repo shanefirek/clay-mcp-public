@@ -566,7 +566,15 @@ export class ClayClient {
     }
 
     const model = options.model || 'gpt-4.1-mini';
-    const authAccountId = options.authAccountId || 'aa_HvuEoKsv0sb0'; // Clay-managed OpenAI
+    const authAccountId =
+      options.authAccountId ||
+      process.env.CLAY_GPT_3_ACCOUNT_ID ||
+      process.env.CLAY_OPENAI_ACCOUNT_ID;
+    if (!authAccountId) {
+      throw new Error(
+        'No OpenAI auth account configured for AI fields. Pass authAccountId explicitly, or set CLAY_GPT_3_ACCOUNT_ID (or CLAY_OPENAI_ACCOUNT_ID) to an aa_xxx account ID. Use clay_list_integrations to find available accounts.'
+      );
+    }
 
     const inputsBinding: Array<{ name: string; formulaText?: string }> = [
       { name: 'useCase', formulaText: '"use-ai"' },
