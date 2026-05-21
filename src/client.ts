@@ -1181,12 +1181,15 @@ export class ClayClient {
     waterfallConfigs: WaterfallConfig['waterfallConfigs'],
     runMode: WaterfallConfig['runMode'] = 'DONT_RUN'
   ): Promise<ClayField> {
-    const payload = {
+    const payload: Record<string, unknown> = {
       waterfallFieldName: name,
-      runMode,
-      runAsButton: false,
+      waterfallGroupName: name,
+      runAsButton: runMode === 'DONT_RUN',
+      conditionalRunFormulaText: null,
+      conditionalRunFormulaPrompt: null,
+      hideFromViews: false,
+      truncateOutput: true,
       waterfallConfigs: waterfallConfigs.map((config) => {
-        // Remove undefined authAccountId as it may cause API validation issues
         const cleanConfig: Record<string, unknown> = {
           type: 'actionConfig' as const,
           actionKey: config.actionKey,
@@ -1200,18 +1203,30 @@ export class ClayClient {
         }
         return cleanConfig;
       }),
+      attributionData: {
+        created_from: 'mcp_server',
+      },
     };
-    return this.request<ClayField>(
+
+    const response = await this.request<{ fieldGroupMap?: Record<string, unknown> }>(
       'POST',
       `/tables/${tableId}/waterfall/v2`,
       payload
     );
+
+    if (response.fieldGroupMap) {
+      const firstGroup = Object.values(response.fieldGroupMap)[0] as Record<string, unknown>;
+      return firstGroup as unknown as ClayField;
+    }
+
+    return response as unknown as ClayField;
   }
 
   /**
    * Create a generic enrichment field from registry config
    *
-   * This is the main method for creating enrichment fields programmatically.
+   * Routes through the waterfall/v2 endpoint (Clay's current API).
+   * Single enrichments are wrapped as a one-item waterfall.
    * Use the enrichment registry to look up actionKey, actionPackageId, etc.
    */
   async createEnrichmentField(
@@ -1225,30 +1240,73 @@ export class ClayClient {
       dataType?: string;
       conditionalRunFormulaText?: string;
       runAsButton?: boolean;
+      attributePath?: string;
     }
   ): Promise<ClayField> {
-    const payload: Record<string, unknown> = {
-      type: 'action',
+    const actionConfig: Record<string, unknown> = {
+      type: 'actionConfig',
+      actionKey: config.actionKey,
+      actionPackageId: config.actionPackageId,
+      inputsBinding: config.inputsBinding,
+      attributePath: config.attributePath || 'result',
       name,
-      typeSettings: {
-        dataTypeSettings: { type: config.dataType || 'text' },
-        actionKey: config.actionKey,
-        actionVersion: 1,
-        actionPackageId: config.actionPackageId,
-        inputsBinding: config.inputsBinding,
-        ...(config.conditionalRunFormulaText && { conditionalRunFormulaText: config.conditionalRunFormulaText }),
-        ...(config.runAsButton && { runAsButton: true }),
+    };
+
+    if (typeof config.authAccountId === 'string') {
+      actionConfig.authAccountId = config.authAccountId;
+    }
+
+    const payload: Record<string, unknown> = {
+      waterfallConfigs: [actionConfig],
+      waterfallFieldName: name,
+      waterfallGroupName: name,
+      runAsButton: config.runAsButton || false,
+      conditionalRunFormulaText: config.conditionalRunFormulaText || null,
+      conditionalRunFormulaPrompt: null,
+      hideFromViews: true,
+      truncateOutput: true,
+      safeToSend: false,
+      createDataProviderField: false,
+      requireValidationSuccess: false,
+      attributionData: {
+        created_from: 'mcp_server',
       },
     };
 
-    // Only add authAccountId if it's a string (not null/undefined)
-    const ts = payload.typeSettings as Record<string, unknown>;
-    if (typeof config.authAccountId === 'string') {
-      ts.authAccountId = config.authAccountId;
-    }
+    try {
+      const response = await this.request<{ fieldGroupMap?: Record<string, unknown>; field?: ClayField }>(
+        'POST',
+        `/tables/${tableId}/waterfall/v2`,
+        payload
+      );
 
-    const response = await this.request<{ field: ClayField }>('POST', `/tables/${tableId}/fields`, payload);
-    return response.field;
+      if (response.fieldGroupMap) {
+        const firstGroup = Object.values(response.fieldGroupMap)[0] as Record<string, unknown>;
+        return firstGroup as unknown as ClayField;
+      }
+
+      if (response.field) {
+        return response.field;
+      }
+
+      return response as unknown as ClayField;
+    } catch (err: unknown) {
+      const error = err as Error;
+      // Clay's waterfall/v2 creates the field but may return 400 FieldNameAlreadyExists
+      // when the waterfall group wrapper name conflicts. The field IS created.
+      // Fall back to fetching the newly created field by name.
+      if (error.message?.includes('FieldNameAlreadyExists')) {
+        const table = await this.getTable(tableId);
+        const tableData = table as { table?: { fields?: Array<{ id: string; name: string; type: string }> } };
+        const created = tableData.table?.fields?.find(
+          (f: { name: string; type: string }) => f.name === name && f.type === 'action'
+        );
+        if (created) {
+          return created as unknown as ClayField;
+        }
+      }
+      throw err;
+    }
   }
 
   /**
