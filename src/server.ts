@@ -14,7 +14,6 @@ import { registerEnrichmentTools } from './tools/enrichments.js';
 import { registerDiscoveryTools } from './tools/discovery.js';
 import { registerRegistryTools } from './tools/registry.js';
 import { registerTemplateTools } from './tools/templates.js';
-import { registerSourcingTools } from './tools/sourcing.js';
 import { registerCrmTools } from './tools/crm.js';
 import { registerWorkflowTools } from './tools/workflows.js';
 import { registerAutoMapperTools } from './tools/automapper.js';
@@ -54,7 +53,6 @@ export function createServer(config: ServerConfig = {}): McpServer {
   registerDiscoveryTools(server, client);
   registerRegistryTools(server, client);
   registerTemplateTools(server, client);
-  registerSourcingTools(server, client);
   registerCrmTools(server, client);
   registerWorkflowTools(server, client);
   registerAutoMapperTools(server, client);

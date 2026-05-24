@@ -1,7 +1,7 @@
 {
   "name": "clay-mcp",
   "version": "1.0.0",
-  "description": "MCP server for Clay's internal API - full control over tables, records, enrichments",
+  "description": "MCP server for Clay — 73 tools, 1,100+ enrichment providers. Maps Clay's internal API for full table, record, enrichment, and CRM control from Claude Code.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -20,10 +20,29 @@
     "clay",
     "model-context-protocol",
     "enrichment",
+    "gtm",
+    "claude-code",
+    "data-enrichment",
+    "crm",
+    "sales-automation",
     "api"
   ],
-  "author": "",
+  "author": "Shane Firek <https://linkedin.com/in/shanefirek>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shanefirek/clay-mcp-public.git"
+  },
+  "homepage": "https://github.com/shanefirek/clay-mcp-public#readme",
+  "bugs": {
+    "url": "https://github.com/shanefirek/clay-mcp-public/issues"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE",
+    "docs/"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "dotenv": "^17.2.3",

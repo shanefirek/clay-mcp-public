@@ -1,61 +1,53 @@
+<div align="center">
+
 # Clay MCP Server
 
-Give Claude full control over your Clay tables via the Model Context Protocol.
+**73 tools. 1,100+ enrichment providers. Full control over Clay from Claude Code.**
 
-> **Note:** This is an unofficial integration using Clay's internal API. Not affiliated with Clay.
+Clay has no public API. This MCP server maps Clay's entire internal surface — tables, records, enrichments, AI columns, waterfalls, CRM sync, webhooks, and drift detection — so you can run your GTM workflows from the terminal.
 
-## What It Does
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-green.svg)](https://nodejs.org)
 
-- **73 tools** for full table control
-- **1100+ enrichment providers** across 21 categories
-- **AI columns**: Claygent, GPT, HTTP API fields
-- **Waterfalls**: Multi-provider email/phone finders
-- **CRM integration**: HubSpot, Salesforce, Google Sheets
-- **Clay credits by default**: Uses Clay-managed API accounts when available
+Built by [Shane Firek](https://shanefirek.com) · [LinkedIn](https://linkedin.com/in/shanefirek) · [GitHub](https://github.com/shanefirek)
 
-## Documentation
+</div>
 
-- **[Agent Guide](docs/AGENT_GUIDE.md)** - Best practices for AI agents using this MCP
-- **[Tools Reference](docs/TOOLS_SUMMARY.md)** - Complete list of 73 tools
+---
+
+<table>
+<tr>
+<td width="25%" align="center"><strong>73 Tools</strong><br/>Tables, records, fields, enrichments, workflows, CRM, webhooks, audit</td>
+<td width="25%" align="center"><strong>1,100+ Providers</strong><br/>Full enrichment registry across 21 categories — email, phone, company, person, technographics</td>
+<td width="25%" align="center"><strong>No Public API Needed</strong><br/>Maps Clay's internal endpoints via session cookie. Same access as your browser.</td>
+<td width="25%" align="center"><strong>Claude Code Native</strong><br/>MCP server — works in Claude Code, Claude Desktop, Cursor, or any MCP client</td>
+</tr>
+</table>
+
+---
 
 ## Quick Start
-
-### 1. Install & Build
 
 ```bash
 git clone https://github.com/shanefirek/clay-mcp-public.git
 cd clay-mcp-public
-npm install
-npm run build
+npm install && npm run build
 ```
 
-### 2. Get Your Session Cookie
+Get your session cookie from Chrome DevTools:
 
-Clay does not have a public API. This server uses Clay's internal session cookie to authenticate — the same cookie your browser uses when you're logged into Clay.
+1. Open [app.clay.com](https://app.clay.com)
+2. DevTools → Application → Cookies → `app.clay.com`
+3. Copy the `claysession` value (starts with `s%3A...`)
 
-> **What this cookie grants:** Full access to your Clay account — creating/deleting tables, running enrichments, spending Clay credits, pushing to CRM. Treat it like a password.
-
-To get the cookie:
-
-1. Open [app.clay.com](https://app.clay.com) in Chrome
-2. Open DevTools (`Cmd + Option + I` on Mac, `F12` on Windows)
-3. Go to **Application** → **Cookies** → `app.clay.com`
-4. Copy the `claysession` cookie value (starts with `s%3A...`)
-
-### 3. Configure Authentication
-
-Set your session cookie as an environment variable. You have two options:
-
-**Option A: MCP config (simplest)**
-
-Add directly to your MCP config (Claude Desktop or `.mcp.json`):
+Add to your MCP config:
 
 ```json
 {
   "mcpServers": {
     "clay": {
       "command": "node",
-      "args": ["/absolute/path/to/clay-mcp-public/dist/index.js"],
+      "args": ["/path/to/clay-mcp-public/dist/index.js"],
       "env": {
         "CLAY_SESSION_COOKIE": "s%3Ayour-session-cookie-here"
       }
@@ -64,100 +56,68 @@ Add directly to your MCP config (Claude Desktop or `.mcp.json`):
 }
 ```
 
-**Option B: `.env` file (recommended for development)**
-
-Copy the example and fill in your cookie:
-
-```bash
-cp .env.example .env
-# Edit .env and set CLAY_SESSION_COOKIE
-```
-
-> `.env` and `.mcp.json` are both gitignored — they will never be committed to version control.
-
-### 4. Restart Claude Desktop
-
-The Clay tools will now be available in Claude.
-
-### Alternative: Configure Claude Code (CLI)
-
-```bash
-claude mcp add clay -e CLAY_SESSION_COOKIE=s%3Ayour-session-cookie-here -- node /absolute/path/to/clay-mcp-public/dist/index.js
-```
-
-Or add it directly to your `.mcp.json` (same format as Option A above).
-
-### 5. (Optional) API Account Overrides
-
-By default, enrichments use **Clay-managed accounts** (billed to your Clay credits). To use your own API keys instead, add account ID overrides:
-
-```json
-{
-  "env": {
-    "CLAY_SESSION_COOKIE": "s%3Ayour-session-cookie-here",
-    "CLAY_HUNTER_ACCOUNT_ID": "aa_your_hunter_account",
-    "CLAY_APOLLO_OAUTH_ACCOUNT_ID": "aa_your_apollo_account"
-  }
-}
-```
-
-See [Authentication Priority](#authentication-priority) for how account resolution works.
+Restart Claude. You're live.
 
 ---
 
-## Key Tools
+## What You Can Do
 
-> See [docs/TOOLS_SUMMARY.md](docs/TOOLS_SUMMARY.md) for the complete list of 73 tools.
+### Tables & Records
+```
+"Show me the schema for table t_abc123"
+"Create a record with First Name: John, Company: acme.com"
+"Update record r_xyz to set Email to john@acme.com"
+```
 
-### Essential Tools
+### Enrichments & Waterfalls
+```
+"Find emails for all records using Findymail"
+"Create an email waterfall: Findymail → Hunter → LeadMagic"
+"Run Apollo person enrichment on records r_123 and r_456"
+```
 
-| Tool | Description |
-|------|-------------|
-| `clay_get_table` | **Start here** - Get table schema with field IDs |
-| `clay_create_enrichment` | Add any enrichment from 1100+ providers |
-| `clay_create_email_waterfall` | Multi-provider email finder |
-| `clay_run_enrichment` | Trigger enrichment on records |
-| `clay_wait_for_enrichment` | Wait for completion |
+### AI Columns
+```
+"Create a Claygent column that researches {Company} and writes a summary"
+"Add an AI column that finds the CEO's LinkedIn URL"
+```
 
-### High-Level Workflows
-
-| Tool | Description |
-|------|-------------|
-| `clay_wizard_find_companies` | Create company table via Clay wizard |
-| `clay_wizard_find_people` | Create people table via Clay wizard |
-| `clay_full_lead_workflow` | Complete: enrich + email + validate |
-| `clay_enrich_company` | One-click company enrichment |
-| `clay_push_to_hubspot` | Push to HubSpot CRM |
-
-### AI Fields
-
-| Tool | Description |
-|------|-------------|
-| `clay_create_claygent_field` | AI web research with citations |
-| `clay_create_ai_field` | LLM text generation |
-| `clay_create_formula_field` | Formula with optional AI generation |
-
-### Webhook Sources
-
-| Tool | Description |
-|------|-------------|
-| `clay_create_webhook_table` | Create table with inbound webhook URL |
-| `clay_get_source` | Get webhook URL and config |
-| `clay_set_webhook_response_type` | Set JSON or plain text response |
+### CRM & Webhooks
+```
+"Push these records to HubSpot"
+"Create a table with a webhook source for inbound leads"
+```
 
 ### Audit & Drift Detection
+```
+"Snapshot this table's config"
+"Check if the table has drifted from the baseline"
+```
 
-| Tool | Description |
-|------|-------------|
-| `clay_snapshot_table` | Capture table config for version control |
-| `clay_check_table_drift` | Compare current state vs baseline |
-| `clay_snapshot_workspace` | Snapshot all tables at once |
+---
+
+## Tool Categories
+
+| Category | Tools | What It Does |
+|----------|-------|-------------|
+| **Tables** | 13 | Create, list, get schema, manage views |
+| **Records** | 7 | CRUD operations on table rows |
+| **Fields** | 9 | Formula, AI, and Claygent columns |
+| **Enrichments** | 11 | Run any of 1,100+ providers |
+| **Workflows** | 14 | Full lead workflows, company enrichment, email waterfalls |
+| **CRM** | 4 | HubSpot, Salesforce, Google Sheets push |
+| **Sources** | 8 | Webhook tables, wizard (find companies/people) |
+| **Audit** | 4 | Snapshot, drift detection, workspace audit |
+| **Registry** | 4 | Search and browse enrichment providers |
+| **Templates** | 3 | Claygent prompt templates |
+
+See [docs/TOOLS_SUMMARY.md](docs/TOOLS_SUMMARY.md) for the full reference.
 
 ---
 
 ## Enrichment Registry
 
-The server includes **1100+ enrichment providers** across **21 categories**:
+1,100+ providers across 21 categories. Use Clay-managed accounts (billed to Clay credits) or bring your own API keys.
 
 | Category | Example Providers |
 |----------|-----------|
@@ -170,286 +130,87 @@ The server includes **1100+ enrichment providers** across **21 categories**:
 | **CRM** | HubSpot, Salesforce, Pipedrive |
 | **Technographics** | BuiltWith, Wappalyzer |
 | **AI** | Claygent, Use AI (GPT-4) |
-| **Core** | Domain lookup, HTTP API, Web scraping |
 
-See `clay_list_enrichments()` for the full list.
-
-### Authentication Priority
-
-The server resolves which API account to use in this order:
-
-1. **Environment variable override** - `CLAY_HUNTER_ACCOUNT_ID=aa_xxx`
-2. **Explicit parameter** - `authAccountId: "aa_xxx"` in tool call
-3. **Clay-managed account** - Uses Clay credits (default)
-
-### Clay-Managed Accounts (Default)
-
-19 providers have **Clay-managed accounts** - these use Clay credits instead of requiring your own API keys:
-
-- Findymail, Hunter, LeadMagic, Prospeo, Dropcontact
-- Datagma, Icypeas, Smarte
-- Apollo (all actions)
-- BuiltWith
-- Use AI (OpenAI)
+19 providers have Clay-managed accounts — no API key needed, billed to your Clay credits.
 
 ### Using Your Own API Keys
 
-To use your own connected accounts instead of Clay credits, set environment variables:
-
 ```bash
-# In .env or Claude Desktop config
 CLAY_HUNTER_ACCOUNT_ID=aa_your_account_id
 CLAY_FINDYMAIL_ACCOUNT_ID=aa_your_account_id
 CLAY_APOLLO_OAUTH_ACCOUNT_ID=aa_your_account_id
-CLAY_BUILT_WITH_ACCOUNT_ID=aa_your_account_id
 ```
 
-Or use the `useOwnAccount` parameter:
-```
-clay_create_enrichment(..., useOwnAccount: true)
-```
+Find account IDs: `npx ts-node scripts/discover-clay-accounts.ts`
 
 ---
 
-## Example Prompts
+## How Authentication Works
 
-Ask Claude things like:
+Clay has no public API or API key system. This server authenticates using a **session cookie** — the same token your browser uses when you log into app.clay.com.
 
-**Records:**
-- "Show me the schema for table t_abc123"
-- "Create a record with First Name: John, Last Name: Doe, Company: acme.com"
-- "Update record r_xyz to set Email to john@acme.com"
+The session cookie has full access to your Clay account: tables, records, enrichments, CRM integrations, credits. Treat it like a password.
 
-**Enrichments:**
-- "Find emails for all records in my table using Findymail"
-- "Create an email waterfall with Findymail → Hunter → LeadMagic"
-- "Run Apollo person enrichment on records r_123 and r_456"
+| File | Contains secrets? | Gitignored? |
+|------|-------------------|-------------|
+| `.env` | Yes | Yes |
+| `.mcp.json` | Yes | Yes |
+| `.env.example` | No | No |
 
-**AI Columns:**
-- "Create a Claygent column that researches {Company} and writes a one-sentence description"
-- "Add an AI column that finds the CEO's LinkedIn URL for {Company}"
-
-**Webhooks:**
-- "Create a new table with a webhook source so I can POST data from Zapier"
-- "Get the webhook URL for my inbound leads table"
-
-**Audit & Compliance:**
-- "Snapshot this table's config so I can track changes"
-- "Check if the table has drifted from the baseline"
-- "Snapshot all tables in my workspace"
+If you suspect a cookie was exposed, log out of Clay to invalidate the session.
 
 ---
 
-## Configuring for Your Organization
+## Configuring for Your Org
 
-The MCP provides tools, but Claude needs **business context** to make good decisions. Add a `CLAUDE.md` file to your project (or system prompt) with your org's specific configuration.
+The MCP provides tools, but Claude needs **business context** to make good decisions. Add a `CLAUDE.md` to your project with:
 
-Consider defining:
+- **ICP definition** — who you're targeting (industry, size, titles)
+- **Enrichment preferences** — which providers in what order
+- **Workflow rules** — quality gates, scoring thresholds, naming conventions
+- **Signal weights** — what signals matter for lead scoring
 
-- **ICP (Ideal Customer Profile)** — Company fit (industry, size, funding stage, geography), contact fit (titles, seniority), and disqualification criteria
-- **Enrichment preferences** — Which providers to use and in what priority order for email finding, company data, person data, and validation
-- **Workflow standards** — Quality gates (e.g., always validate emails before sequencing), lead scoring thresholds, naming conventions for tables and views
-- **Scoring signals** — What signals matter for lead scoring and how much weight each carries
-- **Connected integrations** — Which CRM, sequence tool, and notification channels to push data to
-
-This context helps Claude choose the right tools, providers, and workflows for your specific business.
+See the [Agent Guide](docs/AGENT_GUIDE.md) for detailed examples.
 
 ---
 
-## Webhook Sources
+## Documentation
 
-Create tables that accept inbound data via HTTP POST:
-
-```
-1. clay_create_webhook_table("Inbound Leads", workbookId, workspaceId)
-   → Returns webhook URL: https://api.clay.com/v3/sources/webhook/inbound-leads-xxx
-
-2. POST data to the webhook URL from any external system (Zapier, n8n, custom app)
-
-3. Data flows into Clay table automatically
-```
-
-Options:
-- `responseType: "JSON"` - Returns structured response
-- `responseType: "PLAIN_TEXT"` - Returns simple "OK"
-- Auth tokens available for secure webhooks
-
----
-
-## Drift Detection
-
-Track config changes and enforce SOPs with audit tools:
-
-```
-1. Create baseline:
-   clay_snapshot_table(tableId) → Save JSON to git
-
-2. Check for drift:
-   clay_check_table_drift(tableId, baseline)
-   → "🚨 DRIFT: 2 fields added, 1 view renamed"
-
-3. Investigate:
-   clay_compare_snapshots(before, after)
-   → Shows exactly what changed
-```
-
-Use cases:
-- Detect unauthorized field additions
-- Enforce naming conventions
-- Audit trail for compliance
-- Version control table configs in git
-
----
-
-## MCP Resources
-
-Browse Clay data directly via resource URIs:
-
-| URI | Description |
-|-----|-------------|
-| `clay://workspaces` | List all workspaces |
-| `clay://tables/{tableId}` | Table schema |
-| `clay://tables/{tableId}/fields` | Field definitions |
-| `clay://enrichments` | Provider registry |
+| Doc | What It Covers |
+|-----|---------------|
+| [Agent Guide](docs/AGENT_GUIDE.md) | Best practices for AI agents using this MCP |
+| [Tools Summary](docs/TOOLS_SUMMARY.md) | All 73 tools with parameters and descriptions |
+| [API Reference](docs/CLAY_API_REFERENCE.md) | Mapped Clay API endpoints |
 
 ---
 
 ## Development
 
 ```bash
-# Install
-npm install
-
-# Build
-npm run build
-
-# Watch mode (rebuild on changes)
-npm run dev
-
-# Type check
-npm run typecheck
+npm install          # Install dependencies
+npm run build        # Compile TypeScript
+npm run dev          # Watch mode
+npm run test         # Run tests
+npm run lint         # Type check
 ```
-
-### Project Structure
-
-```
-clay-mcp/
-├── src/
-│   ├── index.ts              # Entry point
-│   ├── server.ts             # MCP server setup
-│   ├── client.ts             # Clay API client
-│   ├── auth.ts               # Session cookie handling
-│   ├── rate-limiter.ts       # API rate limiting
-│   ├── validation.ts         # Zod schemas for ID validation
-│   ├── tools/
-│   │   ├── tables.ts         # Table/view management (13 tools)
-│   │   ├── records.ts        # Record CRUD (7 tools)
-│   │   ├── fields.ts         # Formula/AI fields (9 tools)
-│   │   ├── enrichments.ts    # Enrichment tools (11 tools)
-│   │   ├── workflows.ts      # High-level workflows (14 tools)
-│   │   ├── crm.ts            # CRM integration (4 tools)
-│   │   ├── sourcing.ts       # (deprecated - see sources.ts)
-│   │   ├── sources.ts        # Webhook + wizard sourcing (8 tools)
-│   │   ├── audit.ts          # Drift detection (4 tools)
-│   │   ├── automapper.ts     # Auto-mapping (4 tools)
-│   │   ├── registry.ts       # Provider registry (4 tools)
-│   │   └── templates.ts      # Claygent templates (3 tools)
-│   ├── enrichments/
-│   │   ├── index.ts          # Registry loader & auth resolution
-│   │   └── registry.json     # 1100+ provider actions
-│   ├── resources/            # MCP resources
-│   └── types/                # TypeScript types
-├── docs/
-│   ├── AGENT_GUIDE.md        # Best practices for AI agents
-│   └── TOOLS_SUMMARY.md      # All 73 tools documented
-└── dist/                     # Compiled output
-```
-
----
-
-## Troubleshooting
-
-### Session Cookie Expired
-
-When you see 401 errors, your session cookie has expired:
-
-1. Get a fresh cookie from Chrome DevTools
-2. Update `CLAY_SESSION_COOKIE` in your Claude config
-3. Restart Claude Desktop
-
-### Enrichment Not Running
-
-- Make sure input fields have valid data (domains should be like `acme.com`, not `Acme Inc`)
-- Check for `settingsError` on the field - indicates misconfiguration
-- Try `forceRun: true` to re-run even if data exists
-
-### Rate Limiting
-
-The MCP includes built-in rate limiting to avoid overwhelming Clay's API:
-- Sliding window algorithm with automatic backoff
-- Handles 429 responses gracefully
-- No configuration needed - works automatically
 
 ---
 
 ## Contributing
 
-PRs welcome! Especially for:
+PRs welcome. Especially for:
 
-- More `actionPackageId`s for enrichment providers
-- Additional Clay-managed account IDs
-- Better auth handling (OAuth, browser extension)
-- New API endpoints
+- Additional enrichment provider `actionPackageId`s
+- Clay-managed account IDs
+- New API endpoint mappings
 - Tests
+- Better auth handling (OAuth, browser extension)
 
 ---
 
-## Security
-
-### How Authentication Works
-
-This MCP server authenticates to Clay using a **session cookie** — the same token your browser stores when you log into app.clay.com. There is no official Clay API or API key system.
-
-**What the session cookie can do:**
-- Read and modify all tables, records, and fields in your Clay account
-- Create and run enrichments (which spend Clay credits)
-- Push data to connected integrations (HubSpot, Salesforce, etc.)
-- Create and delete workbooks and tables
-
-**In short: the session cookie has the same permissions as your logged-in browser session.**
-
-### Keeping Credentials Safe
-
-| File | Contains secrets? | Gitignored? |
-|------|-------------------|-------------|
-| `.env` | Yes (session cookie) | Yes |
-| `.mcp.json` | Yes (session cookie) | Yes |
-| `.env.example` | No (placeholder values only) | No (safe to commit) |
-| `claude_desktop_config.json` | Yes (session cookie) | N/A (system file, not in repo) |
-
-**Rules:**
-- Never commit a real session cookie to version control
-- Never share your session cookie in issues, PRs, or chat
-- If you suspect a cookie was exposed, log out of Clay (this invalidates the session)
-- The MCP server only uses the cookie to make API calls to `api.clay.com` — it does not store, log, or transmit the cookie anywhere else
-
-### For Agents and Automation
-
-If you are an AI agent or a person configuring this MCP for an agent:
-
-- The `CLAY_SESSION_COOKIE` env var is **required** — without it, every tool call will fail
-- The cookie is a long URL-encoded string starting with `s%3A`
-- It goes in the `env` block of your MCP config, or in a `.env` file in the project root
-- The server reads it once at startup from `process.env.CLAY_SESSION_COOKIE`
-- If tool calls start returning 401 errors, the cookie has expired and needs to be refreshed from the browser
-
 ## Disclaimer
 
-This is an **unofficial** integration using Clay's internal API.
-
-- Requires session cookies (not official API keys)
-- Use at your own risk
-- Not affiliated with or endorsed by Clay
+Unofficial integration using Clay's internal API. The API may change without notice. Requires session cookies. Not affiliated with or endorsed by Clay. Use at your own risk.
 
 ---
 
